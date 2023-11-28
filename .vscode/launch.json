@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Debug main.py",
+            "type": "python",
+            "request": "launch",
+            "program": "D:/Project/PosFL-DL/main.py", // 修改这一行
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
