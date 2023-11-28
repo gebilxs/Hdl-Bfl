@@ -13,7 +13,7 @@ dataset: mnist
 device: cuda
 batchsize: 10
 model_name: cnn
-local_learning_rate: 0.01
+local_learning_rate: 0.005
 optimizer: SGD
 IID: 0
 max_num_comm: 1
@@ -21,7 +21,7 @@ num_devices: 20
 shard_test_data: 0
 num_malicious: 0
 noise_variance: 1
-local_epochs: 5
+local_epochs: 1
 save_folder_name: items
 num_classes: 10
 privacy: False

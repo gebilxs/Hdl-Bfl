@@ -20,7 +20,7 @@ if __name__ =='__main__':
     parser.add_argument('-dev','--device',type = str,default='cuda',choices=["cpu","cuda"])
     parser.add_argument('-B', '--batchsize', type=int, default=10, help='local train batch size')
     parser.add_argument('-mn', '--model_name', type=str, default='cnn', help='the model to train')
-    parser.add_argument('-lr', "--local_learning_rate", type=float, default=0.01, help="learning rate, use value from origin paper as default")
+    parser.add_argument('-lr', "--local_learning_rate", type=float, default=0.005, help="learning rate, use value from origin paper as default")
     parser.add_argument('-op', '--optimizer', type=str, default="SGD", help='optimizer to be used, by default implementing stochastic gradient descent')
     parser.add_argument('-iid', '--IID', type=int, default=0, help='the way to allocate data to devices')
     parser.add_argument('-max_ncomm', '--max_num_comm', type=int, default=1, help='maximum number of communication rounds, may terminate early if converges')

@@ -1,0 +1,47 @@
+Command line arguments used -
+
+
+All arguments used -
+gpu: 0
+verbose: 1
+save_network_snapshots: 0
+destroy_tx_in_block: 0
+resume_path: None
+save_freq: 5
+save_most_recent: 2
+dataset: mnist
+device: cuda
+batchsize: 10
+model_name: cnn
+local_learning_rate: 0.005
+optimizer: SGD
+IID: 0
+max_num_comm: 1
+num_devices: 20
+shard_test_data: 0
+num_malicious: 0
+noise_variance: 1
+local_epochs: 5
+save_folder_name: items
+num_classes: 10
+privacy: False
+dp_sigma: 0.0
+learning_rate_decay_gamma: 0.99
+learning_rate_decay: False
+unit_reward: 1
+knock_out_rounds: 6
+lazy_worker_knock_out_rounds: 10
+pow_difficulty: 0
+miner_acception_wait_time: 0.0
+miner_accepted_transactions_size_limit: 0.0
+miner_pos_propagated_block_wait_time: inf
+validator_threshold: 1.0
+malicious_updates_discount: 0.0
+malicious_validator_on: 0
+network_stability: 1.0
+even_link_speed_strength: 1
+base_data_transmission_speed: 70000.0
+even_computation_power: 1
+hard_assign: 12,5,3
+all_in_one: 1
+check_signature: 1

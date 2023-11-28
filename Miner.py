@@ -39,7 +39,15 @@ class Miner(Device):
         self.round_end_time = 0
 
     def add_device_to_association(self, to_add_device):
-            if not to_add_device.return_id() in self.black_list:
-                vars(self)[f'{self.role}_associated_{to_add_device.return_role()}_set'].add(to_add_device)
-            else:
-                print(f"WARNING: {to_add_device.return_id()} in {self.role} {self.id}'s black list. Not added by the {self.role}.")
+        role_key = f'{self.role}_associated_{to_add_device.return_role()}_set'
+        if not hasattr(self, role_key):
+            setattr(self, role_key, set())
+        
+        if not to_add_device.return_id() in self.black_list:
+            getattr(self, role_key).add(to_add_device)
+        else:
+            print(f"WARNING: {to_add_device.return_id()} in {self.role} {self.id}'s black list. Not added by the {self.role}.")
+            # if not to_add_device.return_id() in self.black_list:
+            #     vars(self)[f'{self.role}_associated_{to_add_device.return_role()}_set'].add(to_add_device)
+            # else:
+            #     print(f"WARNING: {to_add_device.return_id()} in {self.role} {self.id}'s black list. Not added by the {self.role}.")

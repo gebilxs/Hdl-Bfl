@@ -10,6 +10,8 @@ from sklearn import metrics
 from utils.data_utils import read_client_data
 import random
 from BlockChain import Blockchain 
+from Crypto.PublicKey import RSA
+from hashlib import sha256
 # ChainCode logic 
 # every node got ability to connect with blockChain
 class Device(object):
@@ -78,6 +80,14 @@ class Device(object):
             gamma=args.learning_rate_decay_gamma
         )
         self.learning_rate_decay = args.learning_rate_decay
+        if args.even_link_speed_strength:
+            self.link_speed = args.base_data_transmission_speed
+
+        # init key pair
+        self.modulus = None
+        self.private_key = None
+        self.public_key = None
+        self.generate_rsa_key()
     # TODO malicious_node_load_train_data ! add noise
 
     ''' getter '''
@@ -116,6 +126,12 @@ class Device(object):
 
     def return_round_end_time(self):
         return self.round_end_time
+    
+    def generate_rsa_key(self):
+        keyPair = RSA.generate(bits=1024)
+        self.modulus = keyPair.n
+        self.private_key = keyPair.d
+        self.public_key = keyPair.e
 
     '''load message'''
     def load_train_data(self, batch_size=None):
@@ -144,6 +160,7 @@ class Device(object):
             param.data = new_param.data.clone()
 
     '''test part'''
+    '''for global model'''
     def test_metrics(self):
         testloaderfull = self.load_test_data()
         # self.model = self.load_model('model')
@@ -341,11 +358,12 @@ class Device(object):
             highest_stake_chain_structure = highest_stake_chain.return_chain_structure()
             # need more efficient machenism which is to reverse updates by # of blocks
             self.return_blockchain_object().replace_chain(highest_stake_chain_structure)
-            print(f"{self.idx} chain resynced from peer {updated_from_peer}.")
+            print(f"{self.id} chain resynced from peer {updated_from_peer}.")
             #return block_iter
             return True 
         print("Chain not resynced.")
         return False
+    
     def accumulate_chain_stake(self, chain_to_accumulate):
         accumulated_stake = 0
         chain_to_accumulate = chain_to_accumulate.return_chain_structure()
@@ -450,3 +468,12 @@ class Device(object):
             self.pow_resync_chain()
         else:
             self.pos_resync_chain()
+
+    def return_link_speed(self):
+        return self.link_speed
+
+    def sign_msg(self, msg):
+        hash = int.from_bytes(sha256(str(msg).encode('utf-8')).digest(), byteorder='big')
+        # pow() is python built-in modular exponentiation function
+        signature = pow(hash, self.private_key, self.modulus)
+        return signature
