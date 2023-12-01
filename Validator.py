@@ -365,3 +365,7 @@ class Validator(Device):
     
     def add_post_validation_transaction_to_queue(self, transaction_to_add):
         self.post_validation_transactions_queue.append(transaction_to_add)
+
+    
+    def return_post_validation_transactions_queue(self):
+        return self.post_validation_transactions_queue

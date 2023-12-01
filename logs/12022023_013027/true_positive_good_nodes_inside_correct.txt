@@ -1,3 +1,0 @@
-100.0 = current_validator_accuracy 100.0 - accuracy_by_worker_update_using_own_data 0.0 , by validator 16 on worker 13 in round 1
-100.0 = current_validator_accuracy 100.0 - accuracy_by_worker_update_using_own_data 0.0 , by validator 16 on worker 8 in round 1
-100.0 = current_validator_accuracy 100.0 - accuracy_by_worker_update_using_own_data 0.0 , by validator 16 on worker 17 in round 1

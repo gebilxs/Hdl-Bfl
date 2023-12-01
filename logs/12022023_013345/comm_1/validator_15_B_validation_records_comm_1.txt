@@ -1,1 +1,0 @@
--93.2350082397461: validator 15 B in round 1 evluating worker 1, diff = v_acc:93.24522760646109 - w_acc:0.01021897979080677 1_maliciousness: B

@@ -361,7 +361,7 @@ def run(args):
                 for miner in miners_this_round:
                     if miner.id == associated_miner.id:
                         judge = 1
-                        miner.add_device_to_association(worker)
+                        miner.add_device_to_association(validator)
                         break
                 if judge == 0:
                     print(f"Cannot find a qualified miner in {worker.return_id()} peer list.")
@@ -521,3 +521,35 @@ def run(args):
                         print(f"A validation process is skipped for the transaction from worker {post_validation_unconfirmmed_transaction['worker_device_idx']} by validator {validator.return_id()} due to validator offline.")
             else:
                 print(f"{validator.return_id()} - validator {validator_iter+1}/{len(validators_this_round)} did not receive any transaction from worker or validator in this round.")
+            
+        print(''' Step 4 - validators send post validation transactions to associated miner and miner broadcasts these to other miners in their respecitve peer lists\n''')
+        for miner_iter in range(len(miners_this_round)):
+            miner = miners_this_round[miner_iter]
+			# resync chain
+            if miner.resync_chain(mining_consensus):
+                miner.update_model_after_chain_resync(log_files_folder_path, conn, conn_cursor)
+            print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} accepting validators' post-validation transactions...")
+            associated_validators = list(miner.return_associated_validators())
+            if not associated_validators:
+                print(f"No validators are associated with miner {miner.return_id()} for this communication round.")
+                continue
+            self_miner_link_speed = miner.return_link_speed()
+            validator_transactions_arrival_queue = {}
+            for validator_iter in range(len(associated_validators)):
+                validator = associated_validators[validator_iter]
+                print(f"{validator.return_id()} - validator {validator_iter+1}/{len(associated_validators)} of miner {miner.return_id()} is sending signature verified transaction...")
+                # get queue! 
+                post_validation_transactions_by_validator = validator.return_post_validation_transactions_queue()
+                post_validation_unconfirmmed_transaction_iter = 1
+                for (validator_sending_time, source_validator_link_spped, post_validation_unconfirmmed_transaction) in post_validation_transactions_by_validator:
+                    if validator.online_switcher() and miner.online_switcher():
+                        lower_link_speed = self_miner_link_speed if self_miner_link_speed < source_validator_link_spped else source_validator_link_spped
+                        transmission_delay = getsizeof(str(post_validation_unconfirmmed_transaction))/lower_link_speed
+                        validator_transactions_arrival_queue[validator_sending_time + transmission_delay] = post_validation_unconfirmmed_transaction
+                        print(f"miner {miner.return_id()} has accepted {post_validation_unconfirmmed_transaction_iter}/{len(post_validation_transactions_by_validator)} post-validation transaction from validator {validator.return_id()}")
+                    else:
+                        print(f"miner {miner.return_id()} has not accepted {post_validation_unconfirmmed_transaction_iter}/{len(post_validation_transactions_by_validator)} post-validation transaction from validator {validator.return_id()} due to one of devices or both offline.")
+                    post_validation_unconfirmmed_transaction_iter += 1
+            miner.set_unordered_arrival_time_accepted_validator_transactions(validator_transactions_arrival_queue)
+            
+            miner.miner_broadcast_validator_transactions(miners_this_round)
