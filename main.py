@@ -28,7 +28,7 @@ if __name__ =='__main__':
     parser.add_argument('-st', '--shard_test_data', type=int, default=0, help='it is easy to see the global models are consistent across devices when the test dataset is NOT sharded')
     parser.add_argument('-nm', '--num_malicious', type=int, default=0, help="number of malicious nodes in the network. malicious node's data sets will be introduced Gaussian noise")
     parser.add_argument('-nv', '--noise_variance', type=int, default=1, help="noise variance level of the injected Gaussian Noise")
-    parser.add_argument('-le', '--local_epochs', type=int, default=5, help='local train epoch. Train local model by this same num of epochs for each worker, if -mt is not specified')
+    parser.add_argument('-le', '--local_epochs', type=int, default=1, help='local train epoch. Train local model by this same num of epochs for each worker, if -mt is not specified')
     parser.add_argument('-sfn',"--save_folder_name",type = str,default='items')
     parser.add_argument('-nb',"--num_classes",type=int,default=10,help="num of labels")
     parser.add_argument('-dp',"--privacy",type=bool,default=False,help="differential privacy")

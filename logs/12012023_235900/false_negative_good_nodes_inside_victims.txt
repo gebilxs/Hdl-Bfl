@@ -1,0 +1,5 @@
+73.79740905761719 = current_validator_accuracy 74.1976893453145 - accuracy_by_worker_update_using_own_data 0.40028491616249084 , by validator 10 on worker 1 in round 1
+73.83928680419922 = current_validator_accuracy 74.1976893453145 - accuracy_by_worker_update_using_own_data 0.3584045171737671 , by validator 10 on worker 7 in round 1
+73.45623779296875 = current_validator_accuracy 74.1976893453145 - accuracy_by_worker_update_using_own_data 0.7414528727531433 , by validator 10 on worker 4 in round 1
+73.78814697265625 = current_validator_accuracy 74.1976893453145 - accuracy_by_worker_update_using_own_data 0.40954408049583435 , by validator 10 on worker 3 in round 1
+74.1964111328125 = current_validator_accuracy 74.1976893453145 - accuracy_by_worker_update_using_own_data 0.0012820513220503926 , by validator 10 on worker 8 in round 1

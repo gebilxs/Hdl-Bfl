@@ -1,0 +1,3 @@
+-78.1212158203125: validator 3 B in round 1 evluating worker 1, diff = v_acc:78.14465408805032 - w_acc:0.02343750186264515 1_maliciousness: B
+-77.36288452148438: validator 3 B in round 1 evluating worker 7, diff = v_acc:78.14465408805032 - w_acc:0.7817708849906921 7_maliciousness: B
+-78.1305923461914: validator 3 B in round 1 evluating worker 2, diff = v_acc:78.14465408805032 - w_acc:0.01406250149011612 2_maliciousness: B

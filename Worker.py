@@ -33,6 +33,7 @@ class Worker(Device):
             optimizer=self.optimizer, 
             gamma=args.learning_rate_decay_gamma
         )
+        self.id = id
         self.learning_rate_decay = args.learning_rate_decay
     def worker_reset_vars_for_new_round(self):
         self.received_block_from_miner = None
@@ -149,7 +150,7 @@ class Worker(Device):
             self.net.apply(self.malicious_worker_add_noise_to_weights)
             print(f"malicious worker {self.idx} has added noise to its local updated weights before transmitting")
             with open(f"{log_files_folder_path_comm_round}/comm_{comm_round}_variance_of_noises.txt", "a") as file:
-                file.write(f"{self.return_idx()} {self.return_role()} {is_malicious_node} noise variances: {self.variance_of_noises}\n")
+                file.write(f"{self.return_id()} {self.return_role()} {is_malicious_node} noise variances: {self.variance_of_noises}\n")
         # record accuracies to find good -vh
 
         # TODO 记录日志

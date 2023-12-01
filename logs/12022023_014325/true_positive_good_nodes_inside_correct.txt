@@ -1,0 +1,2 @@
+97.3514211886305 = current_validator_accuracy 97.99741602067184 - accuracy_by_worker_update_using_own_data 0.6459948320413437 , by validator 5 on worker 7 in round 1
+97.99741602067184 = current_validator_accuracy 97.99741602067184 - accuracy_by_worker_update_using_own_data 0.0 , by validator 5 on worker 3 in round 1

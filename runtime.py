@@ -230,6 +230,8 @@ def run(args):
                 worker = Worker(device.args,device.id,device.train_samples,device.test_samples)
                 worker.role = "worker"
                 worker.peer_list = device.peer_list
+                # TODO modify logic
+                worker.set_devices_dict_and_aio(devices_in_network.devices_after_load_data,args.all_in_one)
                 workers_this_round.append(worker)
                 workers_to_assign-=1
             elif miners_to_assign:
@@ -237,6 +239,7 @@ def run(args):
                 miner = Miner(device.args,device.id,device.train_samples,device.test_samples)
                 miner.role = "miner"
                 miner.peer_list = device.peer_list
+                miner.set_devices_dict_and_aio(devices_in_network.devices_after_load_data,args.all_in_one)
                 miners_this_round.append(miner)
                 miners_to_assign-=1
             elif validators_to_assign:
@@ -244,6 +247,7 @@ def run(args):
                 validator = Validator(device.args,device.id,device.train_samples,device.test_samples)
                 validator.role = "validator"
                 validator.peer_list = device.peer_list
+                validator.set_devices_dict_and_aio(devices_in_network.devices_after_load_data,args.all_in_one)
                 validators_this_round.append(validator)
                 validators_to_assign-=1
 # reset
@@ -386,7 +390,6 @@ def run(args):
                 for worker_iter in range(len(associated_workers)):
                     worker = associated_workers[worker_iter]
                     if not worker.return_id() in validator.return_black_list():
-						# TODO here, also add print() for below miner's validators
                         print(f'worker {worker_iter+1}/{len(associated_workers)} of validator {validator.return_id()} is doing local updates')	 
                         total_time_tracker = 0
                         update_iter = 1
@@ -445,8 +448,12 @@ def run(args):
                             local_update_spent_time = worker.worker_local_update(rewards, log_files_folder_path_comm_round, comm_round, local_epochs=args.local_epochs)
                             worker_link_speed = worker.return_link_speed()
                             lower_link_speed = validator_link_speed if validator_link_speed < worker_link_speed else worker_link_speed
+
                             unverified_transaction = worker.return_local_updates_and_signature(comm_round)
                             unverified_transactions_size = getsizeof(str(unverified_transaction))
+                            print()
+                            # for param in unverified_transaction['local_updates_params'].parameters():
+                            #     print(param)
                             transmission_delay = unverified_transactions_size/lower_link_speed
                             # put worker's message(unverified_transaction) into transaction_arrival_queue
                             if validator.online_switcher():
@@ -467,5 +474,50 @@ def run(args):
                 validator.validator_broadcast_worker_transactions(validators_this_round)
             else:
                 print("No transactions have been received by this validator, probably due to workers and/or validators offline or timeout while doing local updates or transmitting updates, or all workers are in validator's black list.")
-        print("Finish")
-        # TODO 检查每个worker模型是不是自己在用
+        
+        print(''' Step 2.5 - with the broadcasted workers transactions, validators decide the final transaction arrival order \n''')
+        for validator_iter in range(len(validators_this_round)):
+            validator = validators_this_round[validator_iter]
+            accepted_broadcasted_validator_transactions = validator.return_accepted_broadcasted_worker_transactions()
+            print(f"{validator.return_id()} - validator {validator_iter+1}/{len(validators_this_round)} is calculating the final transactions arrival order by combining the direct worker transactions received and received broadcasted transactions...")
+            accepted_broadcasted_transactions_arrival_queue = {}
+            if accepted_broadcasted_validator_transactions:
+				# calculate broadcasted transactions arrival time
+                self_validator_link_speed = validator.return_link_speed()
+                for broadcasting_validator_record in accepted_broadcasted_validator_transactions:
+                    broadcasting_validator_link_speed = broadcasting_validator_record['source_validator_link_speed']
+                    lower_link_speed = self_validator_link_speed if self_validator_link_speed < broadcasting_validator_link_speed else broadcasting_validator_link_speed
+                    for arrival_time_at_broadcasting_validator, broadcasted_transaction in broadcasting_validator_record['broadcasted_transactions'].items():
+                        transmission_delay = getsizeof(str(broadcasted_transaction))/lower_link_speed
+                        accepted_broadcasted_transactions_arrival_queue[transmission_delay + arrival_time_at_broadcasting_validator] = broadcasted_transaction
+            else:
+                print(f"validator {validator.return_id()} {validator_iter+1}/{len(validators_this_round)} did not receive any broadcasted worker transaction this round.")
+			# mix the boardcasted transactions with the direct accepted transactions
+            final_transactions_arrival_queue = sorted({**validator.return_unordered_arrival_time_accepted_worker_transactions(), **accepted_broadcasted_transactions_arrival_queue}.items())
+            validator.set_transaction_for_final_validating_queue(final_transactions_arrival_queue)
+            print(f"{validator.return_id()} - validator {validator_iter+1}/{len(validators_this_round)} done calculating the ordered final transactions arrival order. Total {len(final_transactions_arrival_queue)} accepted transactions.")
+
+        # validation !!!
+        print(''' Step 3 - validators do self and cross-validation(validate local updates from workers) by the order of transaction arrival time.\n''')
+        for validator_iter in range(len(validators_this_round)):
+            validator = validators_this_round[validator_iter]
+            final_transactions_arrival_queue = validator.return_final_transactions_validating_queue()
+            if final_transactions_arrival_queue:
+				# validator asynchronously does one epoch of update and validate on its own test set
+                local_validation_time = validator.validator_update_model_by_one_epoch_and_validate_local_accuracy()
+                print(f"{validator.return_id()} - validator {validator_iter+1}/{len(validators_this_round)} is validating received worker transactions...")
+                # Check every transaction 
+                for (arrival_time, unconfirmmed_transaction) in final_transactions_arrival_queue:
+                    if validator.online_switcher():
+						# validation won't begin until validator locally done one epoch of update and validation(worker transactions will be queued)
+                        if arrival_time < local_validation_time:
+                            arrival_time = local_validation_time
+                        validation_time, post_validation_unconfirmmed_transaction = validator.validate_worker_transaction(unconfirmmed_transaction, rewards, log_files_folder_path, comm_round, args.malicious_validator_on)
+                        if validation_time:
+                            validator.add_post_validation_transaction_to_queue((arrival_time + validation_time, validator.return_link_speed(), post_validation_unconfirmmed_transaction))
+                            print(f"A validation process has been done for the transaction from worker {post_validation_unconfirmmed_transaction['worker_device_idx']} by validator {validator.return_id()}")
+                            print()
+                    else:
+                        print(f"A validation process is skipped for the transaction from worker {post_validation_unconfirmmed_transaction['worker_device_idx']} by validator {validator.return_id()} due to validator offline.")
+            else:
+                print(f"{validator.return_id()} - validator {validator_iter+1}/{len(validators_this_round)} did not receive any transaction from worker or validator in this round.")
