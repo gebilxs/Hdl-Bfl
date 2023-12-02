@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import copy
+
 class Worker(Device):
     def __init__(self, args, id, train_samples, test_samples, **kwargs):
         super().__init__(args, id, train_samples, test_samples, **kwargs)
@@ -34,6 +35,7 @@ class Worker(Device):
             gamma=args.learning_rate_decay_gamma
         )
         self.id = id
+        self.check_signature = args.check_signature
         self.learning_rate_decay = args.learning_rate_decay
     def worker_reset_vars_for_new_round(self):
         self.received_block_from_miner = None

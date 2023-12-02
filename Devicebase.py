@@ -12,6 +12,7 @@ import random
 from BlockChain import Blockchain 
 from Crypto.PublicKey import RSA
 from hashlib import sha256
+import time
 # ChainCode logic 
 # every node got ability to connect with blockChain
 class Device(object):
@@ -38,7 +39,7 @@ class Device(object):
         # if IID is 0 -> normal dataset
         self.opti = args.optimizer
         self.num_devices = args.num_devices
-        self.model = args.model_name
+        self.round_end_time = 0
 
         self.devices_after_load_data = {}
         self.malicious_nodes_set = []
@@ -88,6 +89,9 @@ class Device(object):
         self.private_key = None
         self.public_key = None
         self.generate_rsa_key()
+
+        self.the_added_block = None
+        self.rewards = 0
     # TODO malicious_node_load_train_data ! add noise
 
     ''' getter '''
@@ -477,3 +481,60 @@ class Device(object):
         # pow() is python built-in modular exponentiation function
         signature = pow(hash, self.private_key, self.modulus)
         return signature
+    
+    def add_to_round_end_time(self, time_to_add):
+        self.round_end_time += time_to_add
+
+    def return_the_added_block(self):
+        return self.the_added_block
+    
+    def verify_block(self, block_to_verify, sending_miner):
+        if not self.online_switcher():
+            print(f"{self.id} goes offline when verifying a block")
+            return False, False
+        verification_time = time.time()
+        mined_by = block_to_verify.return_mined_by()
+        if sending_miner in self.black_list:
+            print(f"The miner propagating/sending this block {sending_miner} is in {self.id}'s black list. Block will not be verified.")
+            return False, False
+        if mined_by in self.black_list:
+            print(f"The miner {mined_by} mined this block is in {self.id}'s black list. Block will not be verified.")
+            return False, False
+        # check if the proof is valid(verify _block_hash).
+        if not self.check_pow_proof(block_to_verify):
+            print(f"PoW proof of the block from miner {self.id} is not verified.")
+            return False, False
+        # # check if miner's signature is valid
+        if self.check_signature:
+            signature_dict = block_to_verify.return_miner_rsa_pub_key()
+            modulus = signature_dict["modulus"]
+            pub_key = signature_dict["pub_key"]
+            signature = block_to_verify.return_signature()
+            # verify signature
+            block_to_verify_before_sign = copy.deepcopy(block_to_verify)
+            block_to_verify_before_sign.remove_signature_for_verification()
+            hash = int.from_bytes(sha256(str(block_to_verify_before_sign.__dict__).encode('utf-8')).digest(), byteorder='big')
+            hashFromSignature = pow(signature, pub_key, modulus)
+            if hash != hashFromSignature:
+                print(f"Signature of the block sent by miner {sending_miner} mined by miner {mined_by} is not verified by {self.role} {self.id}.")
+                return False, False
+            # check previous hash based on own chain
+            last_block = self.return_blockchain_object().return_last_block()
+            if last_block is not None:
+                # check if the previous_hash referred in the block and the hash of latest block in the chain match.
+                last_block_hash = last_block.compute_hash(hash_entire_block=True)
+                if block_to_verify.return_previous_block_hash() != last_block_hash:
+                    print(f"Block sent by miner {sending_miner} mined by miner {mined_by} has the previous hash recorded as {block_to_verify.return_previous_block_hash()}, but the last block's hash in chain is {last_block_hash}. This is possibly due to a forking event from last round. Block not verified and won't be added. Device needs to resync chain next round.")
+                    return False, False
+        # All verifications done.
+        print(f"Block accepted from miner {sending_miner} mined by {mined_by} has been verified by {self.id}!")
+        verification_time = (time.time() - verification_time)/self.computation_power
+        return block_to_verify, verification_time
+    
+    def add_block(self, block_to_add):
+        self.return_blockchain_object().append_block(block_to_add)
+        print(f"d_{self.id} - {self.role[0]} has appened a block to its chain. Chain length now - {self.return_blockchain_object().return_chain_length()}")
+        # TODO delete has_added_block
+        # self.has_added_block = True
+        self.the_added_block = block_to_add
+        return True

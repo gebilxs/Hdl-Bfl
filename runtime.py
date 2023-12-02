@@ -575,3 +575,209 @@ def run(args):
             final_transactions_arrival_queue = sorted({**miner.return_unordered_arrival_time_accepted_validator_transactions(), **accepted_broadcasted_transactions_arrival_queue}.items())
             miner.set_candidate_transactions_for_final_mining_queue(final_transactions_arrival_queue)
             print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} done calculating the ordered final transactions arrival order. Total {len(final_transactions_arrival_queue)} accepted transactions.")
+
+        print(''' Step 5 - miners do self and cross-verification (verify validators' signature) by the order of transaction arrival time and record the transactions in the candidate block according to the limit size. Also mine and propagate the block.\n''')
+        for miner_iter in range(len(miners_this_round)):
+            miner = miners_this_round[miner_iter]
+            final_transactions_arrival_queue = miner.return_final_candidate_transactions_mining_queue()
+            valid_validator_sig_candidate_transacitons = []
+            invalid_validator_sig_candidate_transacitons = []
+            begin_mining_time = 0
+            new_begin_mining_time = begin_mining_time
+            if final_transactions_arrival_queue:
+                print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} is verifying received validator transactions...")
+                time_limit = miner.return_miner_acception_wait_time()
+                size_limit = miner.return_miner_accepted_transactions_size_limit()
+                for (arrival_time, unconfirmmed_transaction) in final_transactions_arrival_queue:
+                    if miner.online_switcher():
+                        if time_limit:
+                            if arrival_time > time_limit:
+                                break
+                        if size_limit:
+                            if getsizeof(str(valid_validator_sig_candidate_transacitons+invalid_validator_sig_candidate_transacitons)) > size_limit:
+                                break
+						# verify validator signature of this transaction
+                        verification_time, is_validator_sig_valid = miner.verify_validator_transaction(unconfirmmed_transaction)
+                        if verification_time:
+                            if is_validator_sig_valid:
+                                validator_info_this_tx = {
+								'validator': unconfirmmed_transaction['validation_done_by'],
+								'validation_rewards': unconfirmmed_transaction['validation_rewards'],
+								'validation_time': unconfirmmed_transaction['validation_time'],
+								'validator_rsa_pub_key': unconfirmmed_transaction['validator_rsa_pub_key'],
+								'validator_signature': unconfirmmed_transaction['validator_signature'],
+								'update_direction': unconfirmmed_transaction['update_direction'],
+								'miner_device_idx': miner.return_id(),
+								'miner_verification_time': verification_time,
+								'miner_rewards_for_this_tx': rewards}
+								# validator's transaction signature valid
+                                found_same_worker_transaction = False
+                                for valid_validator_sig_candidate_transaciton in valid_validator_sig_candidate_transacitons:
+                                    if valid_validator_sig_candidate_transaciton['worker_signature'] == unconfirmmed_transaction['worker_signature']:
+                                        found_same_worker_transaction = True
+                                        break
+                                if not found_same_worker_transaction:
+                                    valid_validator_sig_candidate_transaciton = copy.deepcopy(unconfirmmed_transaction)
+                                    del valid_validator_sig_candidate_transaciton['validation_done_by']
+                                    del valid_validator_sig_candidate_transaciton['validation_rewards']
+                                    del valid_validator_sig_candidate_transaciton['update_direction']
+                                    del valid_validator_sig_candidate_transaciton['validation_time']
+                                    del valid_validator_sig_candidate_transaciton['validator_rsa_pub_key']
+                                    del valid_validator_sig_candidate_transaciton['validator_signature']
+                                    valid_validator_sig_candidate_transaciton['positive_direction_validators'] = []
+                                    valid_validator_sig_candidate_transaciton['negative_direction_validators'] = []
+                                    valid_validator_sig_candidate_transacitons.append(valid_validator_sig_candidate_transaciton)
+                                if unconfirmmed_transaction['update_direction']:
+                                    valid_validator_sig_candidate_transaciton['positive_direction_validators'].append(validator_info_this_tx)
+                                else:
+                                    valid_validator_sig_candidate_transaciton['negative_direction_validators'].append(validator_info_this_tx)
+                                transaction_to_sign = valid_validator_sig_candidate_transaciton
+                            else:
+								# validator's transaction signature invalid
+                                invalid_validator_sig_candidate_transaciton = copy.deepcopy(unconfirmmed_transaction)
+                                invalid_validator_sig_candidate_transaciton['miner_verification_time'] = verification_time
+                                invalid_validator_sig_candidate_transaciton['miner_rewards_for_this_tx'] = rewards
+                                invalid_validator_sig_candidate_transacitons.append(invalid_validator_sig_candidate_transaciton)
+                                transaction_to_sign = invalid_validator_sig_candidate_transaciton
+							# (re)sign this candidate transaction
+                            signing_time = miner.sign_candidate_transaction(transaction_to_sign)
+                            new_begin_mining_time = arrival_time + verification_time + signing_time
+                    else:
+                        print(f"A verification process is skipped for the transaction from validator {unconfirmmed_transaction['validation_done_by']} by miner {miner.return_idx()} due to miner offline.")
+                        new_begin_mining_time = arrival_time
+                    begin_mining_time = new_begin_mining_time if new_begin_mining_time > begin_mining_time else begin_mining_time
+                transactions_to_record_in_block = {}
+                transactions_to_record_in_block['valid_validator_sig_transacitons'] = valid_validator_sig_candidate_transacitons
+                transactions_to_record_in_block['invalid_validator_sig_transacitons'] = invalid_validator_sig_candidate_transacitons
+				# put transactions into candidate block and begin mining
+				# block index starts from 1
+                start_time_point = time.time()
+                candidate_block = Block(idx=miner.return_blockchain_object().return_chain_length()+1, transactions=transactions_to_record_in_block, miner_rsa_pub_key=miner.return_rsa_pub_key())
+				# mine the block
+                miner_computation_power = miner.return_computation_power()
+                if not miner_computation_power:
+                    block_generation_time_spent = float('inf')
+                    miner.set_block_generation_time_point(float('inf'))
+                    print(f"{miner.return_id()} - miner mines a block in INFINITE time...")
+                    continue
+                recorded_transactions = candidate_block.return_transactions()
+                if recorded_transactions['valid_validator_sig_transacitons'] or recorded_transactions['invalid_validator_sig_transacitons']:
+                    print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} mining the block...")
+					# return the last block and add previous hash
+                    last_block = miner.return_blockchain_object().return_last_block()
+                    if last_block is None:
+						# will mine the genesis block
+                        candidate_block.set_previous_block_hash(None)
+                    else:
+                        candidate_block.set_previous_block_hash(last_block.compute_hash(hash_entire_block=True))
+					# mine the candidate block by PoW, inside which the block_hash is also set
+                    mined_block = miner.mine_block(candidate_block, rewards)
+                else:
+                    print("No transaction to mine for this block.")
+                    continue
+				# unfortunately may go offline while propagating its block
+                if miner.online_switcher():
+					# sign the block
+                    miner.sign_block(mined_block)
+                    miner.set_mined_block(mined_block)
+					# record mining time
+                    block_generation_time_spent = (time.time() - start_time_point)/miner_computation_power
+                    miner.set_block_generation_time_point(begin_mining_time + block_generation_time_spent)
+                    print(f"{miner.return_id()} - miner mines a block in {block_generation_time_spent} seconds.")
+                    # immediately propagate the block
+                    miner.propagated_the_block(miner.return_block_generation_time_point(), mined_block,miners_this_round)
+                else:
+                    print(f"Unfortunately, {miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} goes offline after, if successful, mining a block. This if-successful-mined block is not propagated.")
+            else:
+                print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} did not receive any transaction from validator or miner in this round.")
+        
+        print(''' Step 6 - miners decide if adding a propagated block or its own mined block as the legitimate block, and request its associated devices to download this block''')
+        forking_happened = False
+		# comm_round_block_gen_time regarded as the time point when the winning miner mines its block, calculated from the beginning of the round. If there is forking in PoW or rewards info out of sync in PoS, this time is the avg time point of all the appended time by any device
+        comm_round_block_gen_time = []
+        for miner_iter in range(len(miners_this_round)):
+            miner = miners_this_round[miner_iter]
+            unordered_propagated_block_processing_queue = miner.return_unordered_propagated_block_processing_queue()
+			# add self mined block to the processing queue and sort by time
+            this_miner_mined_block = miner.return_mined_block()
+            if this_miner_mined_block:
+                unordered_propagated_block_processing_queue[miner.return_block_generation_time_point()] = this_miner_mined_block
+            ordered_all_blocks_processing_queue = sorted(unordered_propagated_block_processing_queue.items())
+            if ordered_all_blocks_processing_queue:
+                if mining_consensus == 'PoW':
+                    print("\nselect winning block based on PoW")
+					# abort mining if propagated block is received
+                    print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} is deciding if a valid propagated block arrived before it successfully mines its own block...")
+                    for (block_arrival_time, block_to_verify) in ordered_all_blocks_processing_queue:
+                        verified_block, verification_time = miner.verify_block(block_to_verify, block_to_verify.return_mined_by())
+                        if verified_block:
+                            block_mined_by = verified_block.return_mined_by()
+                            if block_mined_by == miner.return_id():
+                                print(f"Miner {miner.return_id()} is adding its own mined block.")
+                            else:
+                                print(f"Miner {miner.return_id()} will add a propagated block mined by miner {verified_block.return_mined_by()}.")
+                            if miner.online_switcher():
+                                miner.add_block(verified_block)
+                            else:
+                                print(f"Unfortunately, miner {miner.return_idx()} goes offline while adding this block to its chain.")
+                            if miner.return_the_added_block():
+								# requesting devices in its associations to download this block
+                                miner.request_to_download(verified_block, block_arrival_time + verification_time)
+                                break								
+                else:
+					# PoS
+                    candidate_PoS_blocks = {}
+                    print("select winning block based on PoS")
+					# filter the ordered_all_blocks_processing_queue to contain only the blocks within time limit
+                    for (block_arrival_time, block_to_verify) in ordered_all_blocks_processing_queue:
+                        if block_arrival_time < args.miner_pos_propagated_block_wait_time:
+                            # 应该是miner进行的挖矿操作
+                            mined_by = block_to_verify.return_mined_by()
+                            # print(mined_by)
+                            candidate_PoS_blocks[devices_in_network.devices_after_load_data[mined_by].return_stake()] = block_to_verify
+                            
+                    high_to_low_stake_ordered_blocks = sorted(candidate_PoS_blocks.items(), reverse=True)
+					# for PoS, requests every device in the network to add a valid block that has the most miner stake in the PoS candidate blocks list, which can be verified through chain
+                    for (stake, PoS_candidate_block) in high_to_low_stake_ordered_blocks:
+                        verified_block, verification_time = miner.verify_block(PoS_candidate_block, PoS_candidate_block.return_mined_by())
+                        if verified_block:
+                            block_mined_by = verified_block.return_mined_by()
+                            if block_mined_by == miner.return_id():
+                                print(f"Miner {miner.return_id()} with stake {stake} is adding its own mined block.")
+                            else:
+                                print(f"Miner {miner.return_id()} will add a propagated block mined by miner {verified_block.return_mined_by()} with stake {stake}.")
+                            if miner.online_switcher():
+                                miner.add_block(verified_block)
+                            else:
+                                print(f"Unfortunately, miner {miner.return_id()} goes offline while adding this block to its chain.")
+                            if miner.return_the_added_block():
+								# requesting devices in its associations to download this block
+                                miner.request_to_download(verified_block, block_arrival_time + verification_time)
+                                break
+                miner.add_to_round_end_time(block_arrival_time + verification_time)
+            else:
+                print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} does not receive a propagated block and has not mined its own block yet.")
+		# CHECK FOR FORKING
+        added_blocks_miner_set = set()
+        for device in devices_list:
+            the_added_block = device.return_the_added_block()
+            if the_added_block:
+                print(f"{device.return_role()} {device.return_id()} has added a block mined by {the_added_block.return_mined_by()}")
+                added_blocks_miner_set.add(the_added_block.return_mined_by())
+                block_generation_time_point = devices_in_network.devices_set[the_added_block.return_mined_by()].return_block_generation_time_point()
+				# commented, as we just want to plot the legitimate block gen time, and the wait time is to avoid forking. Also the logic is wrong. Should track the time to the slowest worker after its global model update
+				# if mining_consensus == 'PoS':
+				# 	if args['miner_pos_propagated_block_wait_time'] != float("inf"):
+				# 		block_generation_time_point += args['miner_pos_propagated_block_wait_time']
+                comm_round_block_gen_time.append(block_generation_time_point)
+        if len(added_blocks_miner_set) > 1:
+            print("WARNING: a forking event just happened!")
+            forking_happened = True
+            with open(f"{log_files_folder_path}/forking_and_no_valid_block_log.txt", 'a') as file:
+                file.write(f"Forking in round {comm_round}\n")
+        else:
+            print("No forking event happened.")
+
+        for device in devices_list:
+            print(device)
+        print("Finish")
