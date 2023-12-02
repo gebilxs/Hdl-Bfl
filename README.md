@@ -21,7 +21,7 @@ BlockChain.py - 提供区块链的结构
 Block.py - 提供区块的结构
 Device.py - 设置基础3种角色的共同属性（主要包括加密解密的部分-RSA...）
 Worker.py - 继承Device.py 本地训练两个模型或者一个模型
-Val.py - 继承Device,py 做验证的功能，主要是验证worker节点给过来数据的合理性和安全性
+Valdator.py - 继承Device,py 做验证的功能，主要是验证worker节点给过来数据的合理性和安全性
 Miner.py - 继承Device.py 做挖矿功能，整合所有内容，
 ChainCode.py - 智能合约的功能，自动发放奖励，通过代币数量选取miner
 model.py - 存放基础模型
@@ -38,10 +38,11 @@ DataSharply？
 2. 使用蒸馏学习的方法（解决模型参数大问题）
 
 ## 进度
-1.完成 step1
-2.完成 step2 准确性测试待做
+完成 step1,2,3,4
 ————————————————————————————————————————
 
+
+3.step 2.5 3 4 4.5 5 6 记录快照
 4.蒸馏学习模块
 4.5 效能测试
 5.reward 机制创新
