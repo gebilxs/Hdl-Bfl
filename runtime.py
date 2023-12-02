@@ -553,3 +553,25 @@ def run(args):
             miner.set_unordered_arrival_time_accepted_validator_transactions(validator_transactions_arrival_queue)
             
             miner.miner_broadcast_validator_transactions(miners_this_round)
+
+            print(''' Step 4.5 - with the broadcasted validator transactions, miners decide the final transaction arrival order\n ''')
+        for miner_iter in range(len(miners_this_round)):
+            miner = miners_this_round[miner_iter]
+            accepted_broadcasted_validator_transactions = miner.return_accepted_broadcasted_validator_transactions()
+            self_miner_link_speed = miner.return_link_speed()
+            print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} calculating the final transactions arrival order by combining the direct worker transactions received and received broadcasted transactions...")
+            accepted_broadcasted_transactions_arrival_queue = {}
+            if accepted_broadcasted_validator_transactions:
+				# calculate broadcasted transactions arrival time
+                for broadcasting_miner_record in accepted_broadcasted_validator_transactions:
+                    broadcasting_miner_link_speed = broadcasting_miner_record['source_device_link_speed']
+                    lower_link_speed = self_miner_link_speed if self_miner_link_speed < broadcasting_miner_link_speed else broadcasting_miner_link_speed
+                    for arrival_time_at_broadcasting_miner, broadcasted_transaction in broadcasting_miner_record['broadcasted_transactions'].items():
+                        transmission_delay = getsizeof(str(broadcasted_transaction))/lower_link_speed
+                        accepted_broadcasted_transactions_arrival_queue[transmission_delay + arrival_time_at_broadcasting_miner] = broadcasted_transaction
+            else:
+                print(f"miner {miner.return_id()} {miner_iter+1}/{len(miners_this_round)} did not receive any broadcasted validator transaction this round.")
+			# mix the boardcasted transactions with the direct accepted transactions
+            final_transactions_arrival_queue = sorted({**miner.return_unordered_arrival_time_accepted_validator_transactions(), **accepted_broadcasted_transactions_arrival_queue}.items())
+            miner.set_candidate_transactions_for_final_mining_queue(final_transactions_arrival_queue)
+            print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} done calculating the ordered final transactions arrival order. Total {len(final_transactions_arrival_queue)} accepted transactions.")

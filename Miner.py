@@ -80,7 +80,7 @@ class Miner(Device):
         #             else:
         #                 print(f"Destination miner {peer.return_idx()} is in miner {self.idx}'s black_list. broadcasting skipped for this dest miner.")
         for miner in miner_this_round:
-                if not miner.return_id() in self.black_list:
+                if not miner.return_id() in self.black_list and miner.return_id()!=self.id:
                     print(f"miner {self.id} is broadcasting received validator transactions to miner {miner.return_id()}.")
                     final_broadcasting_unordered_arrival_time_accepted_validator_transactions_for_dest_miner = copy.copy(self.unordered_arrival_time_accepted_validator_transactions)
                             # if offline, it's like the broadcasted transaction was not received, so skip a transaction
@@ -102,3 +102,12 @@ class Miner(Device):
             print(f"{self.role} {self.id} has accepted validator transactions from {source_device.return_role()} {source_device.return_id()}")
         else:
             print(f"Source miner {source_device.return_role()} {source_device.return_id()} is in {self.role} {self.id}'s black list. Broadcasted transactions not accepted.")
+
+    def return_accepted_broadcasted_validator_transactions(self):
+        return self.miner_accepted_broadcasted_validator_transactions
+    
+    def return_unordered_arrival_time_accepted_validator_transactions(self):
+        return self.unordered_arrival_time_accepted_validator_transactions
+
+    def set_candidate_transactions_for_final_mining_queue(self, final_transactions_arrival_queue):
+        self.final_candidate_transactions_queue_to_mine = final_transactions_arrival_queue
