@@ -37,6 +37,8 @@ class Worker(Device):
         self.id = id
         self.check_signature = args.check_signature
         self.learning_rate_decay = args.learning_rate_decay
+        self.train_samples = train_samples
+
     def worker_reset_vars_for_new_round(self):
         self.received_block_from_miner = None
         self.accuracy_this_round = float('-inf')
@@ -58,7 +60,6 @@ class Worker(Device):
 
     def associate_with_miner(self, to_associate_device_role):
         to_associate_device = vars(self)[f'{self.role}_associated_{to_associate_device_role}']
-        
         # to_associate_device = to_associate_device_role
         shuffled_peer_list = list(self.peer_list)
         random.shuffle(shuffled_peer_list)
@@ -76,7 +77,6 @@ class Worker(Device):
     
     def associate_with_validator(self,to_associate_device_role):
         to_associate_device = vars(self)[f'{self.role}_associated_{to_associate_device_role}']
-        
         # to_associate_device = to_associate_device_role
         shuffled_peer_list = list(self.peer_list)
         random.shuffle(shuffled_peer_list)
@@ -95,19 +95,15 @@ class Worker(Device):
     
     def worker_local_update(self, rewards, log_files_folder_path_comm_round, comm_round, local_epochs=1):
         print(f"Worker {self.id} is doing local_update with computation power {self.computation_power} and link speed {round(self.link_speed,3)} bytes/s")
-        
         # begin train
         trainloader = self.load_train_data()
-
         self.model.train()
-
         self.local_update_time = time.time()
         # local worker update by specified epochs
         # usually, if validator acception time is specified, local_epochs should be 1
         # logging maliciousness
         is_malicious_node = "M" if self.return_is_malicious() else "B"
         self.local_updates_rewards_per_transaction = 0
-
         for step in range(local_epochs):
             for i, (x, y) in enumerate(trainloader):
                 # Data to device
@@ -125,7 +121,7 @@ class Worker(Device):
 
                 # Update rewards
                 self.local_updates_rewards_per_transaction += rewards * (y.shape[0])
-
+        
         # for epoch in range(local_epochs):
         #     for data, label in self.train_dl:
         #         data, label = data.to(self.dev), label.to(self.dev)
@@ -135,13 +131,13 @@ class Worker(Device):
         #         self.opti.step()
         #         self.opti.zero_grad()
         #         self.local_updates_rewards_per_transaction += rewards * (label.shape[0])
-            # record accuracies to find good -vh
+
+        # record accuracies to find good -vh
 
             # with open(f"{log_files_folder_path_comm_round}/worker_{self.idx}_{is_malicious_node}_local_updating_accuracies_comm_{comm_round}.txt", "a") as file:
             #     file.write(f"{self.return_id()} epoch_{local_epochs+1} {self.return_role()} {is_malicious_node}: {self.validate_model_weights(self.net.state_dict())}\n")
             self.local_total_epoch += 1
             self.evaluate_test_data()
-        # local update done
         try:
             self.local_update_time = (time.time() - self.local_update_time)/self.computation_power
         except:
@@ -166,11 +162,9 @@ class Worker(Device):
     def evaluate_test_data(self):
         testloader = self.load_test_data()  # Assuming you have a method to load test data
         self.model.eval()  # Set the model to evaluation mode
-
         total_loss = 0
         correct_predictions = 0
         total_predictions = 0
-
         with torch.no_grad():  # Disable gradient computation during evaluation
             for x, y in testloader:
                 x = x.to(self.device)
@@ -188,12 +182,16 @@ class Worker(Device):
         # Calculate average loss and accuracy
         average_loss = total_loss / len(testloader)
         accuracy = 100 * correct_predictions / total_predictions
-
         print(f"Test Loss: {average_loss:.4f}, Test Accuracy: {accuracy:.2f}%")
 
     def return_local_updates_and_signature(self, comm_round):
         # local_total_accumulated_epochs_this_round also stands for the lastest_epoch_seq for this transaction(local params are calculated after this amount of local epochs in this round)
         # last_local_iteration(s)_spent_time may be recorded to determine calculating time? But what if nodes do not wish to disclose its computation power
-        local_updates_dict = {'worker_device_idx': self.id, 'in_round_number': comm_round, "local_updates_params": copy.deepcopy(self.model), "local_updates_rewards": self.local_updates_rewards_per_transaction, "local_iteration(s)_spent_time": self.local_update_time, "local_total_accumulated_epochs_this_round": self.local_total_epoch, "worker_rsa_pub_key": self.return_rsa_pub_key()}
+        local_updates_dict = {'worker_device_idx': self.id, 'in_round_number': comm_round, 
+                              "local_updates_params": copy.deepcopy(self.model), "local_updates_rewards": self.local_updates_rewards_per_transaction, 
+                              "local_iteration(s)_spent_time": self.local_update_time, "local_total_accumulated_epochs_this_round": self.local_total_epoch, 
+                              "worker_rsa_pub_key": self.return_rsa_pub_key(),"train_samples":self.train_samples}
+    
         local_updates_dict["worker_signature"] = self.sign_msg(sorted(local_updates_dict.items()))
+        # add train sample message
         return local_updates_dict

@@ -124,7 +124,6 @@ class Validator(Device):
 
     # 此时 self.final_transactions_queue_to_validate 包含了去重后的交易
 
-
     def validator_broadcast_worker_transactions(self,validators_this_round):
             # for peer in self.peer_list:
             #     if peer.is_online():
@@ -156,6 +155,7 @@ class Validator(Device):
                     print(f"validator {self.id} has broadcasted {len(final_broadcasting_unordered_arrival_time_accepted_worker_transactions_for_dest_validator)} worker transactions to validator {validator.return_id()}.")
                 else:
                     print(f"Destination validator {validator.return_id()} is in this validator {self.id}'s black_list. broadcasting skipped for this dest validator.")
+   
     def accept_validator_broadcasted_worker_transactions(self, source_validator, unordered_transaction_arrival_queue_from_source_validator):
         if not source_validator.return_id() in self.black_list:
             self.validator_accepted_broadcasted_worker_transactions.append({'source_validator_link_speed': source_validator.return_link_speed(),'broadcasted_transactions': copy.deepcopy(unordered_transaction_arrival_queue_from_source_validator)})
@@ -283,7 +283,7 @@ class Validator(Device):
                 
                 print(f"两者差为：{accuracy_by_worker_update_using_own_data - self.validator_local_accuracy}")
 
-                if accuracy_by_worker_update_using_own_data - self.validator_local_accuracy < (self.validator_threshold * -70):
+                if accuracy_by_worker_update_using_own_data - self.validator_local_accuracy < (self.validator_threshold * -100):
                     transaction_to_validate['update_direction'] = False
                     print(f"NOTE: worker {worker_transaction_device_idx}'s updates is deemed as suspiciously malicious by validator {self.id}")
                     # is it right?
@@ -324,7 +324,7 @@ class Validator(Device):
             transaction_to_validate["validator_signature"] = self.sign_msg(sorted(transaction_to_validate.items()))
             return validation_time, transaction_to_validate
 
-# 通过worker的模型参数在validator上面进行验证
+    # 通过worker的模型参数在validator上面进行验证
     def validate_model_weights(self, weights_to_eval=None):
         # 不一定一定是这个model
         validator_worker_model = self.model
@@ -366,6 +366,5 @@ class Validator(Device):
     def add_post_validation_transaction_to_queue(self, transaction_to_add):
         self.post_validation_transactions_queue.append(transaction_to_add)
 
-    
     def return_post_validation_transactions_queue(self):
         return self.post_validation_transactions_queue

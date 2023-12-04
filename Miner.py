@@ -68,7 +68,6 @@ class Miner(Device):
     def set_unordered_arrival_time_accepted_validator_transactions(self, unordered_arrival_time_accepted_validator_transactions):
         self.unordered_arrival_time_accepted_validator_transactions = unordered_arrival_time_accepted_validator_transactions
 
-
     def miner_broadcast_validator_transactions(self,miner_this_round):
         # for peer in self.peer_list:
         #     if peer.is_online():
@@ -99,7 +98,6 @@ class Miner(Device):
                 else:
                     print(f"Destination miner {miner.return_id()} is in  miner {self.id}'s black_list. broadcasting skipped for this dest miner.")
         
-
     def accept_miner_broadcasted_validator_transactions(self, source_device, unordered_transaction_arrival_queue_from_source_miner):
         # discard malicious node
         if not source_device.return_id() in self.black_list:
@@ -158,6 +156,7 @@ class Miner(Device):
                 print(f"Signature of transaction from validator {transaction_validator_idx} is verified by {self.role} {self.id}!")
                 verification_time = (time.time() - verification_time)/self.computation_power
                 return verification_time, True
+            
     def sign_candidate_transaction(self, candidate_transaction):
         signing_time = time.time()
         candidate_transaction['miner_rsa_pub_key'] = self.return_rsa_pub_key()
@@ -166,6 +165,7 @@ class Miner(Device):
         candidate_transaction["miner_signature"] = self.sign_msg(sorted(candidate_transaction.items()))
         signing_time = (time.time() - signing_time)/self.computation_power
         return signing_time
+    
     def set_block_generation_time_point(self, block_generation_time_point):
         self.block_generation_time_point = block_generation_time_point
 
@@ -238,12 +238,9 @@ class Miner(Device):
     
     def return_mined_block(self):
         return self.mined_block
-    
 
-    
-
-    def request_to_download(self, block_to_download, requesting_time_point):
-        # 所有的区块都进行下载
+    def request_to_download(self, block_to_download, requesting_time_point,real_devices):
+        # 所有的devices_list中的都进行下载
         print(f"miner {self.id} is requesting its associated devices to download the block it just added to its chain")
         devices_in_association = self.miner_associated_validator_set.union(self.miner_associated_worker_set)
         for device in devices_in_association:
@@ -255,6 +252,10 @@ class Miner(Device):
                 transmission_delay = getsizeof(str(block_to_download.__dict__))/lower_link_speed
                 verified_block, verification_time = device.verify_block(block_to_download, block_to_download.return_mined_by())
                 if verified_block:
+                    # update global device_list
+                    for real_device in real_devices:
+                        if real_device.return_id() == device.return_id():
+                            real_device.add_block(verified_block)
                     # forgot to check for maliciousness of the block miner
                     device.add_block(verified_block)
                 device.add_to_round_end_time(requesting_time_point + transmission_delay + verification_time)

@@ -6,8 +6,9 @@ from runtime import run
 if __name__ =='__main__':
     total_start = time.time()
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Block_Fed_Simulation")
+
     # debug attributes
-    parser.add_argument('-g', '--gpu', type=str, default='0', help='gpu id to use(e.g. 0,1,2,3)')
+    parser.add_argument('-g', '--gpu', type=str, default='0', help='GPU id to use(e.g. 0,1,2,3)')
     parser.add_argument('-v', '--verbose', type=int, default=1, help='print verbose debug log')
     parser.add_argument('-sn', '--save_network_snapshots', type=int, default=0, help='only save network_snapshots if this is set to 1; will create a folder with date in the snapshots folder')
     parser.add_argument('-dtx', '--destroy_tx_in_block', type=int, default=0, help='currently transactions stored in the blocks are occupying GPU ram and have not figured out a way to move them to CPU ram or harddisk, so turn it on to save GPU ram in order for PoS to run 100+ rounds. NOT GOOD if there needs to perform chain resyncing.')
@@ -23,7 +24,7 @@ if __name__ =='__main__':
     parser.add_argument('-lr', "--local_learning_rate", type=float, default=0.005, help="learning rate, use value from origin paper as default")
     parser.add_argument('-op', '--optimizer', type=str, default="SGD", help='optimizer to be used, by default implementing stochastic gradient descent')
     parser.add_argument('-iid', '--IID', type=int, default=0, help='the way to allocate data to devices')
-    parser.add_argument('-max_ncomm', '--max_num_comm', type=int, default=1, help='maximum number of communication rounds, may terminate early if converges')
+    parser.add_argument('-max_ncomm', '--max_num_comm', type=int, default=10, help='maximum number of communication rounds, may terminate early if converges')
     parser.add_argument('-nd', '--num_devices', type=int, default=20, help='numer of the devices in the simulation network')
     parser.add_argument('-st', '--shard_test_data', type=int, default=0, help='it is easy to see the global models are consistent across devices when the test dataset is NOT sharded')
     parser.add_argument('-nm', '--num_malicious', type=int, default=0, help="number of malicious nodes in the network. malicious node's data sets will be introduced Gaussian noise")
@@ -33,10 +34,11 @@ if __name__ =='__main__':
     parser.add_argument('-nb',"--num_classes",type=int,default=10,help="num of labels")
     parser.add_argument('-dp',"--privacy",type=bool,default=False,help="differential privacy")
     parser.add_argument('-dps',"--dp_sigma",type=float,default=0.0)
-    parser.add_argument('-ldg', "--learning_rate_decay_gamma", type=float, default=0.99)
+    parser.add_argument('-ldg', "--learning_rate_decay_gamma", type=float, default=0.99,help="decay rate")
     parser.add_argument('-ld',"--learning_rate_decay",type=bool,default=False)
+
     # blockchain system consensus attributes
-    # TODO design reward setting 
+    # TODO design reward setting,should complete in Block.py
     parser.add_argument('-ur', '--unit_reward', type=int, default=1, help='unit reward for providing data, verification of signature, validation and so forth')
     parser.add_argument('-ko', '--knock_out_rounds', type=int, default=6, help="a worker or validator device is kicked out of the device's peer list(put in black list) if it's identified as malicious for this number of rounds")
     parser.add_argument('-lo', '--lazy_worker_knock_out_rounds', type=int, default=10, help="a worker device is kicked out of the device's peer list(put in black list) if it does not provide updates for this number of rounds, due to too slow or just lazy to do updates and only accept the model udpates.(do not care lazy validator or miner as they will just not receive rewards)")

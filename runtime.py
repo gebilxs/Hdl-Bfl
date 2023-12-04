@@ -17,26 +17,29 @@ from Worker import Worker
 from Miner import Miner
 from Validator import Validator
 import copy
-# Add project runtime
+from pathlib import Path
+
 def run(args):
     NETWORK_SNAPSHOTS_BASE_FOLDER = "snapshots"
     date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
     log_files_folder_path = f"logs/{date_time}"
+    
     # create log / if not exist
     if not os.path.exists("logs"):
         os.makedirs('logs')
 
     # select CUDA
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
     # dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     if args.device == "cuda" and not torch.cuda.is_available():
         print("\ncuda is not avaiable.\n")
         args.device = "cpu"
     dev = args.device
+
     # pre-define system variables
     latest_round_num = 0
 
-    # 网络快照
     ''' If network_snapshot is specified, continue from left '''
     if args.resume_path:
         if not args.save_network_snapshots:
@@ -68,6 +71,7 @@ def run(args):
 			# get mining consensus
             if line.startswith('--pow_difficulty'):
                 mining_consensus = 'PoW' if int(line.split(" ")[-1]) else 'PoS'
+
 		# determine roles to assign
         try:
             workers_needed = int(roles_requirement[0])
@@ -83,17 +87,15 @@ def run(args):
             miners_needed = 1
     else:
         ''' SETTING UP FROM SCRATCH'''
-        # real logic
 
         # 0. create log_files_folder_path if not resume
         os.mkdir(log_files_folder_path)
 
-       # 1. save arguments used
+        # 1. save arguments used
         with open(f'{log_files_folder_path}/args_used.txt', 'w') as f:
             f.write("Command line arguments used -\n")
             f.write(' '.join(sys.argv[1:]))
             f.write("\n\nAll arguments used -\n")
-               # 遍历args对象并写入每个参数及其值
             for arg in vars(args):
                 f.write(f"{arg}: {getattr(args, arg)}\n")
 
@@ -142,9 +144,9 @@ def run(args):
         # 6. create neural net based on the input model name
         # model in model.py
         model_judge(args)
+
         # 7. assign GPU(s) if available to the net, otherwise CPU
 		# os.environ['CUDA_VISIBLE_DEVICES'] = args['gpu']
-
         if torch.cuda.device_count() > 1:
             args.model_name = torch.nn.DataParallel(args.model_name)
         print(f"{torch.cuda.device_count()} GPUs are available to use!")
@@ -156,9 +158,7 @@ def run(args):
 
         # 9.create devices in the network pass 
         devices_in_network = DevicesInNetwork(args)
-        devices_list = list(devices_in_network.devices_after_load_data.values())
-        
-        # create ChainCode 
+        devices_list = list(devices_in_network.devices_after_load_data.values())       
 
         for device in devices_list:
             device.set_parameters(args.model_name)
@@ -197,9 +197,12 @@ def run(args):
 	in_round integer,
 	when_resyncing text
 	)""")
-################Start####################
+
+####################################Start####################################
+
+    # args.global_model = copy.deepcopy(args.model_name)
     for comm_round in range(latest_round_num +1 ,args.max_num_comm + 1):
- # create round specific log folder
+    # create round specific log folder
         log_files_folder_path_comm_round = f"{log_files_folder_path}/comm_{comm_round}"
         if os.path.exists(log_files_folder_path_comm_round):
             print(f"Deleting {log_files_folder_path_comm_round} and create a new one.")
@@ -221,16 +224,14 @@ def run(args):
         workers_this_round = []
         miners_this_round = []
         validators_this_round = []
-        # set random
         random.shuffle(devices_list)
+
         for device in (devices_list):
             if workers_to_assign:
-                # put device in workers_this_round
                 device.role = "worker"
                 worker = Worker(device.args,device.id,device.train_samples,device.test_samples)
                 worker.role = "worker"
                 worker.peer_list = device.peer_list
-                # TODO modify logic
                 worker.set_devices_dict_and_aio(devices_in_network.devices_after_load_data,args.all_in_one)
                 workers_this_round.append(worker)
                 workers_to_assign-=1
@@ -250,8 +251,6 @@ def run(args):
                 validator.set_devices_dict_and_aio(devices_in_network.devices_after_load_data,args.all_in_one)
                 validators_this_round.append(validator)
                 validators_to_assign-=1
-# reset
-            # print("begin_online_switcher")
             device.online_switcher()
 
         ''' DEBUGGING CODE '''
@@ -288,17 +287,17 @@ def run(args):
             print(f"+++++++++ Round {comm_round} Beginning Peer Lists +++++++++")
 
         ''' DEBUGGING CODE ENDS '''
-        global_model = copy.deepcopy(args.model_name)
+        
 		# re-init round vars - in real distributed system, they could still fall behind in comm round, but here we assume they will all go into the next round together, thought device may go offline somewhere in the previous round and their variables were not therefore reset
         for miner in miners_this_round:
             miner.miner_reset_vars_for_new_round()
-            miner.set_parameters(global_model)
+            # miner.set_parameters(args.global_model)
         for worker in workers_this_round:
             worker.worker_reset_vars_for_new_round()
-            worker.set_parameters(global_model)
+            # worker.set_parameters(args.global_model)
         for validator in validators_this_round:
             validator.validator_reset_vars_for_new_round()
-            validator.set_parameters(global_model)
+            # validator.set_parameters(args.global_model)
 
 		# DOESN'T MATTER ANY MORE AFTER TRACKING TIME, but let's keep it - orginal purpose: shuffle the list(for worker, this will affect the order of dataset portions to be trained)
         random.shuffle(workers_this_round) 
@@ -328,10 +327,14 @@ def run(args):
                         break
                 if judge == 0:
                     print(f"Cannot find a qualified miner in {worker.return_id()} peer list.")
-                # if associated_miner:
-                #     associated_miner.add_device_to_association(worker)
-                # else:
-                #     print(f"Cannot find a qualified miner in {worker.return_id()} peer list.")
+
+            """ origin code
+                if associated_miner:
+                    associated_miner.add_device_to_association(worker)
+                else:
+                    print(f"Cannot find a qualified miner in {worker.return_id()} peer list.")
+            """
+
 			# worker associates with a validator to send worker transactions
             if worker.online_switcher():
                 associated_validator = worker.associate_with_validator("validator")
@@ -343,10 +346,13 @@ def run(args):
                         break
                 if judge == 0:
                     print(f"Cannot find a qualified validator in {worker.return_id()} peer list.")
-                # if associated_validator:
-                #     associated_validator.add_device_to_association(worker)
-                # else:
-                #     print(f"Cannot find a qualified validator in {worker.return_id()} peer list.")
+
+                """
+                if associated_validator:
+                    associated_validator.add_device_to_association(worker)
+                else:
+                    print(f"Cannot find a qualified validator in {worker.return_id()} peer list.")
+                """
 
         print(''' Step 2 - validators accept local updates and broadcast to other validators in their respective peer lists (workers local_updates() are called in this step.\n''')
         for validator_iter in range(len(validators_this_round)):
@@ -365,12 +371,15 @@ def run(args):
                         break
                 if judge == 0:
                     print(f"Cannot find a qualified miner in {worker.return_id()} peer list.")
-                # if associated_miner:
-                #     associated_miner.add_device_to_association(validator)
-                # else:
-                #     print(f"Cannot find a qualified miner in validator {validator.return_id()} peer list.")
-			# validator accepts local updates from its workers association
 
+                """
+                if associated_miner:
+                    associated_miner.add_device_to_association(validator)
+                else:
+                    print(f"Cannot find a qualified miner in validator {validator.return_id()} peer list.")
+                """
+
+			# validator accepts local updates from its workers association
             associated_workers = list(validator.return_associated_workers())
             if not associated_workers:
                 print(f"No workers are associated with validator {validator.return_id()} {validator_iter+1}/{len(validators_this_round)} for this communication round.")
@@ -438,6 +447,7 @@ def run(args):
                                 else:
                                     total_time_tracker = total_time_tracker - records_dict[worker][update_iter - 1]['transmission_delay'] + wasted_update_time + wasted_transmission_delay
                             update_iter += 1
+           # logic enter here *
             else:
 				 # did not specify wait time. every associated worker perform specified number of local epochs
                 for worker_iter in range(len(associated_workers)):
@@ -468,7 +478,6 @@ def run(args):
             validator.set_unordered_arrival_time_accepted_worker_transactions(transaction_arrival_queue)
 			# in case validator off line for accepting broadcasted transactions but can later back online to validate the transactions itself receives
             validator.set_transaction_for_final_validating_queue(sorted(transaction_arrival_queue.items()))
-			
 			# broadcast to other validators
             if transaction_arrival_queue:
                 validator.validator_broadcast_worker_transactions(validators_this_round)
@@ -497,7 +506,6 @@ def run(args):
             validator.set_transaction_for_final_validating_queue(final_transactions_arrival_queue)
             print(f"{validator.return_id()} - validator {validator_iter+1}/{len(validators_this_round)} done calculating the ordered final transactions arrival order. Total {len(final_transactions_arrival_queue)} accepted transactions.")
 
-        # validation !!!
         print(''' Step 3 - validators do self and cross-validation(validate local updates from workers) by the order of transaction arrival time.\n''')
         for validator_iter in range(len(validators_this_round)):
             validator = validators_this_round[validator_iter]
@@ -551,10 +559,9 @@ def run(args):
                         print(f"miner {miner.return_id()} has not accepted {post_validation_unconfirmmed_transaction_iter}/{len(post_validation_transactions_by_validator)} post-validation transaction from validator {validator.return_id()} due to one of devices or both offline.")
                     post_validation_unconfirmmed_transaction_iter += 1
             miner.set_unordered_arrival_time_accepted_validator_transactions(validator_transactions_arrival_queue)
-            
             miner.miner_broadcast_validator_transactions(miners_this_round)
 
-            print(''' Step 4.5 - with the broadcasted validator transactions, miners decide the final transaction arrival order\n ''')
+        print(''' Step 4.5 - with the broadcasted validator transactions, miners decide the final transaction arrival order\n ''')
         for miner_iter in range(len(miners_this_round)):
             miner = miners_this_round[miner_iter]
             accepted_broadcasted_validator_transactions = miner.return_accepted_broadcasted_validator_transactions()
@@ -724,18 +731,17 @@ def run(args):
 								# requesting devices in its associations to download this block
                                 miner.request_to_download(verified_block, block_arrival_time + verification_time)
                                 break								
+                # PoS
                 else:
-					# PoS
                     candidate_PoS_blocks = {}
                     print("select winning block based on PoS")
 					# filter the ordered_all_blocks_processing_queue to contain only the blocks within time limit
                     for (block_arrival_time, block_to_verify) in ordered_all_blocks_processing_queue:
                         if block_arrival_time < args.miner_pos_propagated_block_wait_time:
-                            # 应该是miner进行的挖矿操作
                             mined_by = block_to_verify.return_mined_by()
-                            # print(mined_by)
-                            candidate_PoS_blocks[devices_in_network.devices_after_load_data[mined_by].return_stake()] = block_to_verify
-                            
+                            # candidate_PoS_blocks[devices_in_network.devices_after_load_data[mined_by].return_stake()] = block_to_verify
+                            stake = devices_in_network.devices_after_load_data[mined_by].return_stake()
+                            candidate_PoS_blocks[(stake, mined_by)] = block_to_verify
                     high_to_low_stake_ordered_blocks = sorted(candidate_PoS_blocks.items(), reverse=True)
 					# for PoS, requests every device in the network to add a valid block that has the most miner stake in the PoS candidate blocks list, which can be verified through chain
                     for (stake, PoS_candidate_block) in high_to_low_stake_ordered_blocks:
@@ -748,23 +754,28 @@ def run(args):
                                 print(f"Miner {miner.return_id()} will add a propagated block mined by miner {verified_block.return_mined_by()} with stake {stake}.")
                             if miner.online_switcher():
                                 miner.add_block(verified_block)
+                                for device in devices_list:
+                                    if miner.return_id() == device.return_id():
+                                        device.add_block(verified_block)
                             else:
                                 print(f"Unfortunately, miner {miner.return_id()} goes offline while adding this block to its chain.")
                             if miner.return_the_added_block():
-								# requesting devices in its associations to download this block
-                                miner.request_to_download(verified_block, block_arrival_time + verification_time)
+					        # requesting devices in its associations to download this block
+                                miner.request_to_download(verified_block, block_arrival_time + verification_time,devices_list)
                                 break
                 miner.add_to_round_end_time(block_arrival_time + verification_time)
             else:
                 print(f"{miner.return_id()} - miner {miner_iter+1}/{len(miners_this_round)} does not receive a propagated block and has not mined its own block yet.")
-		# CHECK FOR FORKING
+	
+        # CHECK FOR FORKING
         added_blocks_miner_set = set()
+
         for device in devices_list:
             the_added_block = device.return_the_added_block()
             if the_added_block:
                 print(f"{device.return_role()} {device.return_id()} has added a block mined by {the_added_block.return_mined_by()}")
                 added_blocks_miner_set.add(the_added_block.return_mined_by())
-                block_generation_time_point = devices_in_network.devices_set[the_added_block.return_mined_by()].return_block_generation_time_point()
+                block_generation_time_point = devices_in_network.devices_after_load_data[the_added_block.return_mined_by()].return_block_generation_time_point()
 				# commented, as we just want to plot the legitimate block gen time, and the wait time is to avoid forking. Also the logic is wrong. Should track the time to the slowest worker after its global model update
 				# if mining_consensus == 'PoS':
 				# 	if args['miner_pos_propagated_block_wait_time'] != float("inf"):
@@ -778,6 +789,97 @@ def run(args):
         else:
             print("No forking event happened.")
 
+        print(''' Step 6.5 last step - process the added block - 1.collect usable updated params\n 2.malicious nodes identification\n 3.get rewards\n 4.do local udpates\n This code block is skipped if no valid block was generated in this round''')
+        all_devices_round_ends_time = []
         for device in devices_list:
-            print(device)
-        print("Finish")
+            if device.return_the_added_block() and device.online_switcher():
+				# collect usable updated params, malicious nodes identification, get rewards and do local udpates
+                processing_time = device.process_block(device.return_the_added_block(), log_files_folder_path, conn, conn_cursor)
+                device.other_tasks_at_the_end_of_comm_round(comm_round, log_files_folder_path)
+                device.add_to_round_end_time(processing_time)
+                all_devices_round_ends_time.append(device.return_round_end_time())
+
+        print(''' Logging Accuracies by Devices ''')
+        for device in devices_list:
+            device.evaluate_test_data()
+            with open(f"{log_files_folder_path_comm_round}/accuracy_comm_{comm_round}.txt", "a") as file:
+                is_malicious_node = "M" if device.return_is_malicious() else "B"
+                file.write(f"{device.return_id()} {device.return_role()} {is_malicious_node}: {device.return_accuracy_this_round}\n")
+
+		# logging time, mining_consensus and forking
+		# get the slowest device end time
+        comm_round_spent_time = time.time() - comm_round_start_time
+        with open(f"{log_files_folder_path_comm_round}/accuracy_comm_{comm_round}.txt", "a") as file:
+			# corner case when all miners in this round are malicious devices so their blocks are rejected
+            try:
+                comm_round_block_gen_time = max(comm_round_block_gen_time)
+                file.write(f"comm_round_block_gen_time: {comm_round_block_gen_time}\n")
+            except:
+                no_block_msg = "No valid block has been generated this round."
+                print(no_block_msg)
+                file.write(f"comm_round_block_gen_time: {no_block_msg}\n")
+                with open(f"{log_files_folder_path}/forking_and_no_valid_block_log.txt", 'a') as file2:
+					# TODO this may be caused by "no transaction to mine" for the miner. Forgot to check for block miner's maliciousness in request_to_downlaod()
+                    file2.write(f"No valid block in round {comm_round}\n")
+            try:
+                slowest_round_ends_time = max(all_devices_round_ends_time)
+                file.write(f"slowest_device_round_ends_time: {slowest_round_ends_time}\n")
+            except:
+				# corner case when all transactions are rejected by miners
+                file.write("slowest_device_round_ends_time: No valid block has been generated this round.\n")
+                with open(f"{log_files_folder_path}/forking_and_no_valid_block_log.txt", 'r+') as file2:
+                    no_valid_block_msg = f"No valid block in round {comm_round}\n"
+                    if file2.readlines()[-1] != no_valid_block_msg:
+                        file2.write(no_valid_block_msg)
+            file.write(f"mining_consensus: {mining_consensus} {args.pow_difficulty}\n")
+            file.write(f"forking_happened: {forking_happened}\n")
+            file.write(f"comm_round_spent_time_on_this_machine: {comm_round_spent_time}\n")
+        conn.commit()
+
+		# if no forking, log the block miner
+        if not forking_happened:
+            legitimate_block = None
+            for device in devices_list:
+                legitimate_block = device.return_the_added_block()
+                if legitimate_block is not None:
+					# skip the device who's been identified malicious and cannot get a block from miners
+                    break
+            with open(f"{log_files_folder_path_comm_round}/accuracy_comm_{comm_round}.txt", "a") as file:
+                if legitimate_block is None:
+                    file.write("block_mined_by: no valid block generated this round\n")
+                else:
+                    block_mined_by = legitimate_block.return_mined_by()
+                    is_malicious_node = "M" if devices_in_network.devices_after_load_data[block_mined_by].return_is_malicious() else "B"
+                    file.write(f"block_mined_by: {block_mined_by} {is_malicious_node}\n")
+        else:
+            with open(f"{log_files_folder_path_comm_round}/accuracy_comm_{comm_round}.txt", "a") as file:
+                file.write(f"block_mined_by: Forking happened\n")
+
+        print(''' Logging Stake by Devices ''')
+        # TODO
+        # for device in devices_list:
+        #     device.accuracy_this_round = device.validate_model_weights()
+        #     with open(f"{log_files_folder_path_comm_round}/stake_comm_{comm_round}.txt", "a") as file:
+        #         is_malicious_node = "M" if device.return_is_malicious() else "B"
+        #         file.write(f"{device.return_id()} {device.return_role()} {is_malicious_node}: {device.return_stake()}\n")
+
+		# a temporary workaround to free GPU mem by delete txs stored in the blocks. Not good when need to resync chain
+        if args.destroy_tx_in_block:
+            for device in devices_list:
+                last_block = device.return_blockchain_object().return_last_block()
+                if last_block:
+                    last_block.free_tx()
+
+		# save network_snapshot if reaches save frequency
+        if args.save_network_snapshots and (comm_round == 1 or comm_round % args.save_freq == 0):
+            if args.save_most_recent:
+                paths = sorted(Path(network_snapshot_save_path).iterdir(), key=os.path.getmtime)
+                if len(paths) > args['save_most_recent']:
+                    for _ in range(len(paths) - args['save_most_recent']):
+						# make it 0 byte as os.remove() moves file to the bin but may still take space
+						# https://stackoverflow.com/questions/53028607/how-to-remove-the-file-from-trash-in-drive-in-colab
+                        open(paths[_], 'w').close() 
+                        os.remove(paths[_])
+            snapshot_file_path = f"{network_snapshot_save_path}/snapshot_r_{comm_round}"
+            print(f"Saving network snapshot to {snapshot_file_path}")
+            pickle.dump(devices_in_network, open(snapshot_file_path, "wb"))

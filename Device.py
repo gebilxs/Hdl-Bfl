@@ -29,8 +29,6 @@ class DevicesInNetwork(Device):
     # TODO every client get train_data and test_data
         self.data_set_dir_allocation(args,Device)
 
-    
-    
     def data_set_dir_allocation(self,args,deviceObj):
         # TODO add malicious_node set
         for i in range (self.num_devices):
