@@ -13,6 +13,7 @@ from BlockChain import Blockchain
 from Crypto.PublicKey import RSA
 from hashlib import sha256
 import time
+from collections import defaultdict
 # ChainCode logic 
 # every node got ability to connect with blockChain
 class Device(object):
@@ -75,6 +76,7 @@ class Device(object):
         self.dp_sigma = args.dp_sigma
 
         self.loss = nn.CrossEntropyLoss()
+        self.loss_mse = nn.MSELoss()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
         self.learning_rate_scheduler = torch.optim.lr_scheduler.ExponentialLR(
             optimizer=self.optimizer, 
@@ -116,6 +118,11 @@ class Device(object):
         self.uploaded_weights = []
         self.uploaded_ids = []
         self.uploaded_models = []
+
+        '''logits set'''
+        self.global_logits = [None for _ in range(args.num_classes)]
+        self.used_global_logits = None
+        self.lamda = args.lamda
     # TODO malicious_node_load_train_data ! add noise
 
     ''' getter '''
@@ -158,9 +165,21 @@ class Device(object):
     def set_accuracy_this_round(self, accuracy):
         self.accuracy_this_round = accuracy
 
+    def set_auc_this_round(self,test_auc):
+        self.test_auc = test_auc
+
+    def set_loss_this_round(self,train_loss):
+        self.train_loss_this_round =  train_loss
+
+    def return_test_auc(self):
+        return self.test_auc
+    
     def return_accuracy_this_round(self):
         return self.accuracy_this_round
 
+    def return_train_loss_this_round(self):
+        return self.train_loss_this_round
+    
     def generate_rsa_key(self):
         keyPair = RSA.generate(bits=1024)
         self.modulus = keyPair.n
@@ -237,6 +256,30 @@ class Device(object):
         
         return test_acc, test_num, auc
 
+    # def train_metrics(self):
+    #     trainloader = self.load_train_data()
+    #     # self.model = self.load_model('model')
+    #     # self.model.to(self.device)
+    #     self.model.eval()
+
+    #     train_num = 0
+    #     losses = 0
+    #     with torch.no_grad():
+    #         for x, y in trainloader:
+    #             if type(x) == type([]):
+    #                 x[0] = x[0].to(self.device)
+    #             else:
+    #                 x = x.to(self.device)
+    #             y = y.to(self.device)
+    #             output = self.model(x)
+    #             loss = self.loss(output, y)
+    #             train_num += y.shape[0]
+    #             losses += loss.item() * y.shape[0]
+
+    #     # self.model.cpu()
+    #     # self.save_model(self.model, 'model')
+
+    #     return losses, train_num
     def train_metrics(self):
         trainloader = self.load_train_data()
         # self.model = self.load_model('model')
@@ -254,6 +297,15 @@ class Device(object):
                 y = y.to(self.device)
                 output = self.model(x)
                 loss = self.loss(output, y)
+
+                if self.global_logits != None:
+                    logit_new = copy.deepcopy(output.detach())
+                    for i, yy in enumerate(y):
+                        y_c = yy.item()
+                        if type(self.global_logits[y_c]) != type([]):
+                            logit_new[i, :] = self.global_logits[y_c].data
+                    loss += self.loss_mse(logit_new, output) * self.lamda
+                    
                 train_num += y.shape[0]
                 losses += loss.item() * y.shape[0]
 
@@ -261,7 +313,6 @@ class Device(object):
         # self.save_model(self.model, 'model')
 
         return losses, train_num
-
     # def get_next_train_batch(self):
     #     try:
     #         # Samples a new batch for persionalizing
@@ -277,18 +328,6 @@ class Device(object):
     #     y = y.to(self.device)
 
     #     return x, y
-
-    def save_item(self, item, item_name, item_path=None):
-        if item_path == None:
-            item_path = self.save_folder_name
-        if not os.path.exists(item_path):
-            os.makedirs(item_path)
-        torch.save(item, os.path.join(item_path, "client_" + str(self.id) + "_" + item_name + ".pt"))
-
-    def load_item(self, item_name, item_path=None):
-        if item_path == None:
-            item_path = self.save_folder_name
-        return torch.load(os.path.join(item_path, "client_" + str(self.id) + "_" + item_name + ".pt"))
 
     # @staticmethod
     # def model_exists():
@@ -605,17 +644,20 @@ class Device(object):
                             valid_transactions_records_by_worker[worker_device_idx]['finally_used_params'] = None
                             # -------------------------------------------------------------
                             valid_transactions_records_by_worker[worker_device_idx]['train_samples'] = int
+                            valid_transactions_records_by_worker[worker_device_idx]['logits'] = {}
                         # epoch of this worker's local update
                         local_epoch_seq = valid_validator_sig_worker_transaciton['local_total_accumulated_epochs_this_round']
                         positive_direction_validators = valid_validator_sig_worker_transaciton['positive_direction_validators']
                         negative_direction_validators = valid_validator_sig_worker_transaciton['negative_direction_validators']
                         worker_train_sample = valid_validator_sig_worker_transaciton['train_samples']
+                        worker_logits = valid_validator_sig_worker_transaciton['logits']
                         if len(positive_direction_validators) >= len(negative_direction_validators):
                             # worker transaction can be used
                             valid_transactions_records_by_worker[worker_device_idx]['positive_epochs'].add(local_epoch_seq)
                             valid_transactions_records_by_worker[worker_device_idx]['all_valid_epochs'].add(local_epoch_seq)
                             # -----------------------------------------------------------------
                             valid_transactions_records_by_worker[worker_device_idx]['train_samples']=worker_train_sample
+                            valid_transactions_records_by_worker[worker_device_idx]['logits'].update(worker_logits)
                             # see if this is the latest epoch from this worker
                             if local_epoch_seq == max(valid_transactions_records_by_worker[worker_device_idx]['all_valid_epochs']):
                                 valid_transactions_records_by_worker[worker_device_idx]['finally_used_params'] = valid_validator_sig_worker_transaciton['local_updates_params']
@@ -738,7 +780,7 @@ class Device(object):
                     is_worker_malicious = self.devices_dict[worker_device_idx].return_is_malicious()
                     if local_params_record['finally_used_params']:
                         # identified as benigh worker
-                        finally_used_local_params.append((worker_device_idx, local_params_record['finally_used_params'],local_params_record['train_samples'])) # could be None
+                        finally_used_local_params.append((worker_device_idx, local_params_record['finally_used_params'],local_params_record['train_samples'],local_params_record['logits'])) # could be None
                         if not is_worker_malicious:
                             TP += 1
                         else:
@@ -749,8 +791,12 @@ class Device(object):
                             TN += 1
                         else:
                             FN += 1
+
+
                 if self.online_switcher():
-                    self.global_update(finally_used_local_params)
+                        # self.global_update(finally_used_local_params)
+                        self.global_logits=self.logits_update(finally_used_local_params)
+                        self.set_logits(self.global_logits)
                 else:
                     print(f"Unfortunately, {self.role} {self.id} goes offline when it's doing global_updates.")
         
@@ -847,6 +893,61 @@ class Device(object):
         else:
             print(f"There are no available local params for {self.id} to perform global updates in this comm round.")
 
+    def logits_update(self,used_message):
+        agg_logits_label = defaultdict(list)
+        local_logits_list =[]
+        worker_device_list =[]
+        for(worker_device_idx,worker_model,train_sample,upload_logits) in used_message:
+            local_logits_list.append(upload_logits)
+            worker_device_list.append(worker_device_idx)
+        for local_logits in local_logits_list:
+            for label in local_logits.keys():
+                agg_logits_label[label].append(local_logits[label])
+
+        for [label, logit_list] in agg_logits_label.items():
+            if len(logit_list) > 1:
+                logit = 0 * logit_list[0].data
+                for i in logit_list:
+                    logit += i.data
+                agg_logits_label[label] = logit / len(logit_list)
+            else:
+                agg_logits_label[label] = logit_list[0].data
+
+        return dict(agg_logits_label)
+    
+    def set_logits(self,global_logits):
+        self.used_global_logits = copy.deepcopy(global_logits)
+
+    def use_logit_train(self):
+        trainloader = self.load_train_data()
+        self.model.train()
+        local_epoch =1
+        for step in range(local_epoch):
+            for i,(x,y) in enumerate(trainloader):
+                x = x.to(self.device)
+                y = y.to(self.device)
+
+                output = self.model(x)
+                loss = self.loss(output,y)
+
+                if self.used_global_logits !=None:
+                    logit_new = copy.deepcopy(output.detach())
+                    for i,yy in enumerate(y):
+                        y_c = yy.item()
+                        if type(self.used_global_logits[y_c])!=type([]):
+                            logit_new[i,:] = self.global_logits[y_c].data
+                    loss += self.loss_mse(logit_new,output) * self.lamda
+        
+        # here put new logits to v.but miner and validator don't need update 
+        # logtis = defaultdict(list)
+        # for i,yy in enumerate(y):
+        #     y_c = yy.item()
+        #     logits[y_c].append(output[i,:].detach().data)
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
     def add_parameter(self,w,worker_model):
         for server_param, client_param in zip(self.model.parameters(), worker_model.parameters()):
             server_param.data += client_param.data.clone() * w
@@ -876,30 +977,16 @@ class Device(object):
         # else:
         #     print(f"There are no available local params for {self.id} to perform global updates in this comm round.")
         
-    def evaluate_test_data(self):
-        testloader = self.load_test_data()  # Assuming you have a method to load test data
-        self.model.eval()  # Set the model to evaluation mode
 
-        total_loss = 0
-        correct_predictions = 0
-        total_predictions = 0
 
-        with torch.no_grad():  # Disable gradient computation during evaluation
-            for x, y in testloader:
-                x = x.to(self.device)
-                y = y.to(self.device)
+    def evaluate(self):
+        stats = self.test_metrics()
+        stats_train = self.train_metrics()
+        test_acc = stats[0]/stats[1]
+        test_auc = stats[2]/stats[1]
+        train_loss = stats_train[0]/stats_train[1]
 
-                output = self.model(x)
-                loss = self.loss(output, y)
+        self.set_accuracy_this_round(test_acc)
+        self.set_loss_this_round(train_loss)
+        self.set_auc_this_round(test_auc)
 
-                total_loss += loss.item()
-
-                _, predicted = torch.max(output.data, 1)
-                total_predictions += y.size(0)
-                correct_predictions += (predicted == y).sum().item()
-
-        # Calculate average loss and accuracy
-        average_loss = total_loss / len(testloader)
-        accuracy = 100 * correct_predictions / total_predictions
-        self.set_accuracy_this_round(accuracy)
-        print(f"Device - {self.id}'s Loss: {average_loss:.4f}, Test Accuracy: {accuracy:.2f}%")

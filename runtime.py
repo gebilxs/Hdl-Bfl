@@ -233,6 +233,9 @@ def run(args):
                 worker.role = "worker"
                 worker.peer_list = device.peer_list
                 worker.set_devices_dict_and_aio(devices_in_network.devices_after_load_data,args.all_in_one)
+                # set logits
+                worker.set_deviceL_to_worker(device.used_global_logits)
+                worker.model = device.model
                 workers_this_round.append(worker)
                 workers_to_assign-=1
             elif miners_to_assign:
@@ -241,6 +244,7 @@ def run(args):
                 miner.role = "miner"
                 miner.peer_list = device.peer_list
                 miner.set_devices_dict_and_aio(devices_in_network.devices_after_load_data,args.all_in_one)
+                miner.model = device.model
                 miners_this_round.append(miner)
                 miners_to_assign-=1
             elif validators_to_assign:
@@ -249,10 +253,17 @@ def run(args):
                 validator.role = "validator"
                 validator.peer_list = device.peer_list
                 validator.set_devices_dict_and_aio(devices_in_network.devices_after_load_data,args.all_in_one)
+                validator.model = device.model
                 validators_this_round.append(validator)
                 validators_to_assign-=1
             device.online_switcher()
-
+        # if comm_round > 1 :
+        #     for worker in workers_this_round:
+        #         worker.model = devices_list[worker.return_id()].model
+        #     for miner in miners_this_round:
+        #         miner.model = devices_list[miner.return_id()].model
+        #     for validator in validators_this_round:
+        #         validator.model = devices_list[validator.return_id()].model
         ''' DEBUGGING CODE '''
         if args.verbose:
         # show devices initial chain length and if online
@@ -455,7 +466,7 @@ def run(args):
                     if not worker.return_id() in validator.return_black_list():
                         print(f'worker {worker_iter+1}/{len(associated_workers)} of validator {validator.return_id()} is doing local updates')	 
                         if worker.online_switcher():
-                            local_update_spent_time = worker.worker_local_update(rewards, log_files_folder_path_comm_round, comm_round, local_epochs=args.local_epochs)
+                            local_update_spent_time = worker.FedDistill_worker_local_update(rewards, log_files_folder_path_comm_round, comm_round, local_epochs=args.local_epochs)
                             worker_link_speed = worker.return_link_speed()
                             lower_link_speed = validator_link_speed if validator_link_speed < worker_link_speed else worker_link_speed
 
@@ -798,13 +809,38 @@ def run(args):
                 device.other_tasks_at_the_end_of_comm_round(comm_round, log_files_folder_path)
                 device.add_to_round_end_time(processing_time)
                 all_devices_round_ends_time.append(device.return_round_end_time())
+        
+        print('''other devices begin to learn(include send model,workerD get its model)''')
+        for device in devices_list:
+            # print(f"role is {device.return_role()}")
+            if device.return_role() == 'worker':
+                for worker in workers_this_round:
+                    if worker.return_id() == device.return_id():
+                        device.model = worker.model
+                        # print()
+            else:
+                device.use_logit_train()
 
         print(''' Logging Accuracies by Devices ''')
+        evaluate_global_acc = []
+        evaluate_global_train_loss = []
+        evaluate_global_auc = []
         for device in devices_list:
-            device.evaluate_test_data()
+            device.evaluate()
+            evaluate_global_acc.append(device.return_accuracy_this_round())
+            evaluate_global_train_loss.append(device.return_train_loss_this_round())
+            evaluate_global_auc.append(device.return_test_auc())
             with open(f"{log_files_folder_path_comm_round}/accuracy_comm_{comm_round}.txt", "a") as file:
                 is_malicious_node = "M" if device.return_is_malicious() else "B"
-                file.write(f"{device.return_id()} {device.return_role()} {is_malicious_node}: {device.return_accuracy_this_round}\n")
+                file.write(f"{device.return_id()} {device.return_role()} {is_malicious_node}: {device.return_accuracy_this_round()}\n")
+
+        total_acc = sum(evaluate_global_acc)
+        total_loss = sum(evaluate_global_train_loss)
+        total_auc = sum(evaluate_global_auc)
+        with open(f"{log_files_folder_path}/global_accuracy_this_round.txt","a") as file:
+            file.write(f"{comm_round} round global_accuracy is {total_acc/args.num_devices}\n")
+            file.write(f"{comm_round} round global Train Loss is {total_loss/args.num_devices}\n")
+            file.write(f"{comm_round} rount global auc is {total_auc/args.num_devices}\n\n")
 
 		# logging time, mining_consensus and forking
 		# get the slowest device end time

@@ -1,0 +1,2 @@
+In comm_184 of validating workers, TP = 12, FP = 0, TN = 0, FN = 0.                         
+Accuracy = 1.0, Precision = 1.0, Recall = 1.0, F1 Score = 0.5

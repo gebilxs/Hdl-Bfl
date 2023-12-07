@@ -24,7 +24,7 @@ if __name__ =='__main__':
     parser.add_argument('-lr', "--local_learning_rate", type=float, default=0.005, help="learning rate, use value from origin paper as default")
     parser.add_argument('-op', '--optimizer', type=str, default="SGD", help='optimizer to be used, by default implementing stochastic gradient descent')
     parser.add_argument('-iid', '--IID', type=int, default=0, help='the way to allocate data to devices')
-    parser.add_argument('-max_ncomm', '--max_num_comm', type=int, default=10, help='maximum number of communication rounds, may terminate early if converges')
+    parser.add_argument('-max_ncomm', '--max_num_comm', type=int, default=200, help='maximum number of communication rounds, may terminate early if converges')
     parser.add_argument('-nd', '--num_devices', type=int, default=20, help='numer of the devices in the simulation network')
     parser.add_argument('-st', '--shard_test_data', type=int, default=0, help='it is easy to see the global models are consistent across devices when the test dataset is NOT sharded')
     parser.add_argument('-nm', '--num_malicious', type=int, default=0, help="number of malicious nodes in the network. malicious node's data sets will be introduced Gaussian noise")
@@ -36,7 +36,8 @@ if __name__ =='__main__':
     parser.add_argument('-dps',"--dp_sigma",type=float,default=0.0)
     parser.add_argument('-ldg', "--learning_rate_decay_gamma", type=float, default=0.99,help="decay rate")
     parser.add_argument('-ld',"--learning_rate_decay",type=bool,default=False)
-
+    parser.add_argument('-lam',"--lamda",type = float,default=1.0)
+    parser.add_argument('-al',"--algorithm",type=str,default='FedDistill')
     # blockchain system consensus attributes
     # TODO design reward setting,should complete in Block.py
     parser.add_argument('-ur', '--unit_reward', type=int, default=1, help='unit reward for providing data, verification of signature, validation and so forth')

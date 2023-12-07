@@ -1,0 +1,600 @@
+1 round global_accuracy is 17.9184133171178
+1 round global Train Loss is 2.242606323529116
+
+2 round global_accuracy is 21.871349072497498
+2 round global Train Loss is 2.3467339578533446
+
+3 round global_accuracy is 32.265925723065976
+3 round global Train Loss is 2.2371338778934264
+
+4 round global_accuracy is 31.03319754672008
+4 round global Train Loss is 2.064071686479053
+
+5 round global_accuracy is 30.83598672304055
+5 round global Train Loss is 2.2628975155784503
+
+6 round global_accuracy is 28.910746314609185
+6 round global Train Loss is 2.2334776811370114
+
+7 round global_accuracy is 31.33644689683924
+7 round global Train Loss is 2.328809483278559
+
+8 round global_accuracy is 47.53583900369669
+8 round global Train Loss is 1.5976487057230442
+
+9 round global_accuracy is 60.58993961165868
+9 round global Train Loss is 1.3998221645342632
+
+10 round global_accuracy is 65.84664310708578
+10 round global Train Loss is 1.1954162057840718
+
+11 round global_accuracy is 69.70380296244277
+11 round global Train Loss is 0.8994568310608795
+
+12 round global_accuracy is 56.710715525794534
+12 round global Train Loss is 1.2259194595757081
+
+13 round global_accuracy is 70.48210107932942
+13 round global Train Loss is 0.9394644594496109
+
+14 round global_accuracy is 64.0379529583543
+14 round global Train Loss is 0.9847350335632964
+
+15 round global_accuracy is 64.64180942603159
+15 round global Train Loss is 1.0318669830651512
+
+16 round global_accuracy is 63.43188818515277
+16 round global Train Loss is 1.12002167973406
+
+17 round global_accuracy is 69.79054523586319
+17 round global Train Loss is 0.8168888801087025
+
+18 round global_accuracy is 64.20088484504001
+18 round global Train Loss is 1.1062269530084445
+
+19 round global_accuracy is 76.84315673623061
+19 round global Train Loss is 0.6698123048123429
+
+20 round global_accuracy is 73.863461425223
+20 round global Train Loss is 0.8528827409624009
+
+21 round global_accuracy is 73.1752098744046
+21 round global Train Loss is 0.8722255249410464
+
+22 round global_accuracy is 71.54162395190313
+22 round global Train Loss is 0.9009751120285697
+
+23 round global_accuracy is 67.08169811929591
+23 round global Train Loss is 0.9849358577720189
+
+24 round global_accuracy is 62.12520978863391
+24 round global Train Loss is 1.45095560095089
+
+25 round global_accuracy is 69.60643037198201
+25 round global Train Loss is 0.9390194996036654
+
+26 round global_accuracy is 69.6444401959251
+26 round global Train Loss is 1.0652179303355473
+
+27 round global_accuracy is 73.11126963961838
+27 round global Train Loss is 0.7980622147323759
+
+28 round global_accuracy is 64.47421114923725
+28 round global Train Loss is 0.9948637707109513
+
+29 round global_accuracy is 69.56489740405404
+29 round global Train Loss is 0.9328891118860902
+
+30 round global_accuracy is 71.86377866145406
+30 round global Train Loss is 0.7561597816204072
+
+31 round global_accuracy is 66.04436317369466
+31 round global Train Loss is 1.0441333213668136
+
+32 round global_accuracy is 70.89350594846215
+32 round global Train Loss is 0.8725428988843904
+
+33 round global_accuracy is 62.41276277643948
+33 round global Train Loss is 1.0470008700791098
+
+34 round global_accuracy is 72.91686153748566
+34 round global Train Loss is 0.8359420821389906
+
+35 round global_accuracy is 74.15626678186634
+35 round global Train Loss is 0.7563758039694195
+
+36 round global_accuracy is 83.94381445519632
+36 round global Train Loss is 0.45021592392685256
+
+37 round global_accuracy is 85.80073370907063
+37 round global Train Loss is 0.42187980713980516
+
+38 round global_accuracy is 82.12306170636882
+38 round global Train Loss is 0.5040893863902548
+
+39 round global_accuracy is 83.101232104589
+39 round global Train Loss is 0.4870392170708297
+
+40 round global_accuracy is 81.2481238985426
+40 round global Train Loss is 0.5343366449709779
+
+41 round global_accuracy is 81.36312925093071
+41 round global Train Loss is 0.5396842080895685
+
+42 round global_accuracy is 84.47477305808664
+42 round global Train Loss is 0.4562027708976116
+
+43 round global_accuracy is 82.14239890532156
+43 round global Train Loss is 0.48495628357178033
+
+44 round global_accuracy is 88.34742122245473
+44 round global Train Loss is 0.36272966472130336
+
+45 round global_accuracy is 76.94815224740367
+45 round global Train Loss is 0.6566833367799003
+
+46 round global_accuracy is 80.25619088720617
+46 round global Train Loss is 0.6354774838844724
+
+47 round global_accuracy is 87.15356408701862
+47 round global Train Loss is 0.36734454153331886
+
+48 round global_accuracy is 82.1062252311881
+48 round global Train Loss is 0.5503741087506845
+
+49 round global_accuracy is 82.94922621737688
+49 round global Train Loss is 0.49983552872707404
+
+50 round global_accuracy is 82.73534679972575
+50 round global Train Loss is 0.46970719656258186
+
+51 round global_accuracy is 79.3953345351786
+51 round global Train Loss is 0.5649645488250921
+
+52 round global_accuracy is 79.10648219525976
+52 round global Train Loss is 0.5776123291568889
+
+53 round global_accuracy is 75.95933817822653
+53 round global Train Loss is 0.690184576548616
+
+54 round global_accuracy is 82.1548188458929
+54 round global Train Loss is 0.5090471503682555
+
+55 round global_accuracy is 84.0227742835106
+55 round global Train Loss is 0.44418409582070445
+
+56 round global_accuracy is 89.68771853122266
+56 round global Train Loss is 0.31416898219334477
+
+57 round global_accuracy is 91.65988882894382
+57 round global Train Loss is 0.2762345648108765
+
+58 round global_accuracy is 93.55510261267325
+58 round global Train Loss is 0.20625045393639785
+
+59 round global_accuracy is 92.61109238294334
+59 round global Train Loss is 0.23416211454301866
+
+60 round global_accuracy is 93.11539696927575
+60 round global Train Loss is 0.22448074153845235
+
+61 round global_accuracy is 93.23551947798528
+61 round global Train Loss is 0.2254758920587058
+
+62 round global_accuracy is 93.3703214241508
+62 round global Train Loss is 0.20452506740320925
+
+63 round global_accuracy is 94.56686243245527
+63 round global Train Loss is 0.18450088973391404
+
+64 round global_accuracy is 93.48330362300823
+64 round global Train Loss is 0.20700917598968602
+
+65 round global_accuracy is 92.82398173698608
+65 round global Train Loss is 0.23024862681782682
+
+66 round global_accuracy is 90.92546190538567
+66 round global Train Loss is 0.273505843401971
+
+67 round global_accuracy is 93.0963108698046
+67 round global Train Loss is 0.22291210282251456
+
+68 round global_accuracy is 91.63282625687646
+68 round global Train Loss is 0.27084786178309256
+
+69 round global_accuracy is 94.34196162688538
+69 round global Train Loss is 0.18449141803410124
+
+70 round global_accuracy is 91.57788388285242
+70 round global Train Loss is 0.26349174284752325
+
+71 round global_accuracy is 91.90162253669027
+71 round global Train Loss is 0.24111075454858585
+
+72 round global_accuracy is 91.88740021394725
+72 round global Train Loss is 0.24908185245060138
+
+73 round global_accuracy is 90.73213248631309
+73 round global Train Loss is 0.2764638118470886
+
+74 round global_accuracy is 91.06846694531889
+74 round global Train Loss is 0.2667966712711622
+
+75 round global_accuracy is 88.3287501123352
+75 round global Train Loss is 0.35204976975552105
+
+76 round global_accuracy is 91.7732958205552
+76 round global Train Loss is 0.25741361762461457
+
+77 round global_accuracy is 92.30354409341878
+77 round global Train Loss is 0.23245010358219642
+
+78 round global_accuracy is 91.72903530936097
+78 round global Train Loss is 0.26032264135175065
+
+79 round global_accuracy is 92.76307630319027
+79 round global Train Loss is 0.22774136587206356
+
+80 round global_accuracy is 93.09509228473094
+80 round global Train Loss is 0.20857752883463448
+
+81 round global_accuracy is 94.3101762916721
+81 round global Train Loss is 0.17815035617975267
+
+82 round global_accuracy is 94.54877953758671
+82 round global Train Loss is 0.1764825084405712
+
+83 round global_accuracy is 91.50644627326646
+83 round global Train Loss is 0.26203222743879256
+
+84 round global_accuracy is 93.20671916556927
+84 round global Train Loss is 0.2131353568043841
+
+85 round global_accuracy is 92.88767155658022
+85 round global Train Loss is 0.21571387906758527
+
+86 round global_accuracy is 92.79905614381383
+86 round global Train Loss is 0.22177315226055513
+
+87 round global_accuracy is 93.29951245665792
+87 round global Train Loss is 0.20942664858051047
+
+88 round global_accuracy is 94.4399143937438
+88 round global Train Loss is 0.1807201118189161
+
+89 round global_accuracy is 94.61115622228131
+89 round global Train Loss is 0.17614628995533227
+
+90 round global_accuracy is 93.86423355005832
+90 round global Train Loss is 0.19209411466467893
+
+91 round global_accuracy is 94.48831546617778
+91 round global Train Loss is 0.17356228020555944
+
+92 round global_accuracy is 93.50699103367786
+92 round global Train Loss is 0.2080516657696127
+
+93 round global_accuracy is 92.18697715310971
+93 round global Train Loss is 0.2477953615690141
+
+94 round global_accuracy is 93.04631161688654
+94 round global Train Loss is 0.222648326768762
+
+95 round global_accuracy is 94.35357456013844
+95 round global Train Loss is 0.1772806379151671
+
+96 round global_accuracy is 91.85808281980282
+96 round global Train Loss is 0.2578385322648262
+
+97 round global_accuracy is 89.67565547190073
+97 round global Train Loss is 0.30656517045061166
+
+98 round global_accuracy is 92.17134645820114
+98 round global Train Loss is 0.23901749257520372
+
+99 round global_accuracy is 93.7335467818198
+99 round global Train Loss is 0.18420853611456645
+
+100 round global_accuracy is 95.27722192545625
+100 round global Train Loss is 0.1502918172683107
+
+101 round global_accuracy is 95.77949774211712
+101 round global Train Loss is 0.1381470415937756
+
+102 round global_accuracy is 93.91396611828704
+102 round global Train Loss is 0.18787978437035863
+
+103 round global_accuracy is 95.97794659230655
+103 round global Train Loss is 0.13329400432736627
+
+104 round global_accuracy is 94.62998603841179
+104 round global Train Loss is 0.1651169716718722
+
+105 round global_accuracy is 94.80158203175309
+105 round global Train Loss is 0.15976942183271667
+
+106 round global_accuracy is 95.90873498846217
+106 round global Train Loss is 0.1363225672471038
+
+107 round global_accuracy is 94.26021457727038
+107 round global Train Loss is 0.17914690474734005
+
+108 round global_accuracy is 95.63105783656133
+108 round global Train Loss is 0.1409993797437526
+
+109 round global_accuracy is 94.49612070025776
+109 round global Train Loss is 0.1729060427905398
+
+110 round global_accuracy is 95.56998270462046
+110 round global Train Loss is 0.1438377346523539
+
+111 round global_accuracy is 93.49438172219489
+111 round global Train Loss is 0.1906940077268895
+
+112 round global_accuracy is 93.87102010998048
+112 round global Train Loss is 0.18701523814285512
+
+113 round global_accuracy is 95.90401916927516
+113 round global Train Loss is 0.13328071021336518
+
+114 round global_accuracy is 93.57739301353152
+114 round global Train Loss is 0.19377976986865436
+
+115 round global_accuracy is 93.92124784803482
+115 round global Train Loss is 0.17870622022927102
+
+116 round global_accuracy is 93.47846338006977
+116 round global Train Loss is 0.1933316887620846
+
+117 round global_accuracy is 92.24926393287804
+117 round global Train Loss is 0.22417632577291177
+
+118 round global_accuracy is 93.8311386196274
+118 round global Train Loss is 0.1855258389788499
+
+119 round global_accuracy is 92.94971650650125
+119 round global Train Loss is 0.21791752722233132
+
+120 round global_accuracy is 94.57956600347623
+120 round global Train Loss is 0.15989105058713032
+
+121 round global_accuracy is 95.18555008089893
+121 round global Train Loss is 0.15598457606949137
+
+122 round global_accuracy is 95.38645509822267
+122 round global Train Loss is 0.15061137593149249
+
+123 round global_accuracy is 94.06754307475951
+123 round global Train Loss is 0.19245103912730127
+
+124 round global_accuracy is 94.3398404608102
+124 round global Train Loss is 0.1820839926052671
+
+125 round global_accuracy is 93.72460052313731
+125 round global Train Loss is 0.19228972803662386
+
+126 round global_accuracy is 94.07753640222583
+126 round global Train Loss is 0.19291038544068548
+
+127 round global_accuracy is 95.25174744037778
+127 round global Train Loss is 0.16127618469340524
+
+128 round global_accuracy is 94.22328464079146
+128 round global Train Loss is 0.18433598270134557
+
+129 round global_accuracy is 94.35171613637795
+129 round global Train Loss is 0.1946136216911882
+
+130 round global_accuracy is 95.2429041743489
+130 round global Train Loss is 0.15283172393055738
+
+131 round global_accuracy is 95.51294350473843
+131 round global Train Loss is 0.14125837602982352
+
+132 round global_accuracy is 95.44244193845492
+132 round global Train Loss is 0.1463230483108172
+
+133 round global_accuracy is 95.1841123123593
+133 round global Train Loss is 0.1537833027959296
+
+134 round global_accuracy is 94.89984863941945
+134 round global Train Loss is 0.15728489550475516
+
+135 round global_accuracy is 95.13881500714172
+135 round global Train Loss is 0.15135879021122353
+
+136 round global_accuracy is 96.24467542841718
+136 round global Train Loss is 0.12209737861826338
+
+137 round global_accuracy is 95.42366890930599
+137 round global Train Loss is 0.13854214412049334
+
+138 round global_accuracy is 94.80510110139546
+138 round global Train Loss is 0.15533389871690526
+
+139 round global_accuracy is 93.60009147694274
+139 round global Train Loss is 0.19754217187333262
+
+140 round global_accuracy is 93.50329224489198
+140 round global Train Loss is 0.20304160436330915
+
+141 round global_accuracy is 95.58400581864807
+141 round global Train Loss is 0.13935546816888414
+
+142 round global_accuracy is 94.39946263543716
+142 round global Train Loss is 0.16863001507272057
+
+143 round global_accuracy is 94.8735627268766
+143 round global Train Loss is 0.15359463141166277
+
+144 round global_accuracy is 94.844440441979
+144 round global Train Loss is 0.16133437052232166
+
+145 round global_accuracy is 95.64607562210075
+145 round global Train Loss is 0.14074251388685716
+
+146 round global_accuracy is 95.89714744606815
+146 round global Train Loss is 0.13311967456029575
+
+147 round global_accuracy is 93.32700571375749
+147 round global Train Loss is 0.20655039504796607
+
+148 round global_accuracy is 96.09983822223869
+148 round global Train Loss is 0.12508496029786725
+
+149 round global_accuracy is 95.77014414559476
+149 round global Train Loss is 0.13289144556410265
+
+150 round global_accuracy is 95.26438919379333
+150 round global Train Loss is 0.1620821314466931
+
+151 round global_accuracy is 95.82024672949339
+151 round global Train Loss is 0.1413706652080275
+
+152 round global_accuracy is 95.78940073191309
+152 round global Train Loss is 0.143220112412426
+
+153 round global_accuracy is 95.8675715330122
+153 round global Train Loss is 0.13537370156632658
+
+154 round global_accuracy is 95.55647781756593
+154 round global Train Loss is 0.1500607695909238
+
+155 round global_accuracy is 95.1396263710782
+155 round global Train Loss is 0.1595994037028238
+
+156 round global_accuracy is 94.33176049358985
+156 round global Train Loss is 0.17910709273846676
+
+157 round global_accuracy is 95.19716746162126
+157 round global Train Loss is 0.1642619940280447
+
+158 round global_accuracy is 96.04610933366683
+158 round global Train Loss is 0.13081851961928043
+
+159 round global_accuracy is 95.82097800422369
+159 round global Train Loss is 0.13747712444734486
+
+160 round global_accuracy is 95.46989883290705
+160 round global Train Loss is 0.14625794641440742
+
+161 round global_accuracy is 96.0917034364945   
+161 round global Train Loss is 0.13138445628309453
+
+162 round global_accuracy is 95.88363926892029
+162 round global Train Loss is 0.1262309978672222
+
+163 round global_accuracy is 95.45915249708375
+163 round global Train Loss is 0.14953459261656588
+
+164 round global_accuracy is 95.81019905974105
+164 round global Train Loss is 0.1376699567054695
+
+165 round global_accuracy is 93.62133298986471
+165 round global Train Loss is 0.20369994222678392
+
+166 round global_accuracy is 94.65345517032362
+166 round global Train Loss is 0.17219438629928313
+
+167 round global_accuracy is 95.68941258309273
+167 round global Train Loss is 0.13898735207042046
+
+168 round global_accuracy is 95.04248849054659
+168 round global Train Loss is 0.1681429998317756
+
+169 round global_accuracy is 94.927223378035
+169 round global Train Loss is 0.1766035209743999
+
+170 round global_accuracy is 95.26532965023502
+170 round global Train Loss is 0.1530930229519746
+
+171 round global_accuracy is 95.61133379046518
+171 round global Train Loss is 0.14820248100840608
+
+172 round global_accuracy is 95.11894024227506
+172 round global Train Loss is 0.1685472925716459
+
+173 round global_accuracy is 93.84773440523212
+173 round global Train Loss is 0.19943728809530034
+
+174 round global_accuracy is 94.70240320584118
+174 round global Train Loss is 0.1791266735181401
+
+175 round global_accuracy is 96.51127409703085
+175 round global Train Loss is 0.11068189400168578
+
+176 round global_accuracy is 96.55363177351543
+176 round global Train Loss is 0.11731580849133431
+
+177 round global_accuracy is 95.02301422251799
+177 round global Train Loss is 0.15662441065060584
+
+178 round global_accuracy is 96.22542000468415
+178 round global Train Loss is 0.12421041455347441
+
+179 round global_accuracy is 96.30076207689197
+179 round global Train Loss is 0.12065415262050214
+
+180 round global_accuracy is 96.26367886971192
+180 round global Train Loss is 0.11988655956165233
+
+181 round global_accuracy is 96.41045387613974
+181 round global Train Loss is 0.11376581014251357
+
+182 round global_accuracy is 95.90468030076815
+182 round global Train Loss is 0.14320464525910698
+
+183 round global_accuracy is 96.29732467422347
+183 round global Train Loss is 0.13023043147953522
+
+184 round global_accuracy is 94.7413641216421
+184 round global Train Loss is 0.18573565276320178
+
+185 round global_accuracy is 95.10491463372543
+185 round global Train Loss is 0.15986924306211472
+
+186 round global_accuracy is 96.55162419735343
+186 round global Train Loss is 0.11269010679050666
+
+187 round global_accuracy is 94.86094668713963
+187 round global Train Loss is 0.16598221647892691
+
+188 round global_accuracy is 95.52644773432196
+188 round global Train Loss is 0.152206460523084
+
+189 round global_accuracy is 95.93759259367926
+189 round global Train Loss is 0.14470522919406031
+
+190 round global_accuracy is 94.23608237166968
+190 round global Train Loss is 0.20369579989811606
+
+191 round global_accuracy is 95.27894631045775
+191 round global Train Loss is 0.16687749352961637
+
+192 round global_accuracy is 94.02172635815725
+192 round global Train Loss is 0.20932531204459665
+
+193 round global_accuracy is 95.69243059341797
+193 round global Train Loss is 0.15606978378021505
+
+194 round global_accuracy is 94.42518786487571
+194 round global Train Loss is 0.19350542558402567
+
+195 round global_accuracy is 94.71162316461033
+195 round global Train Loss is 0.18436122587328724
+
+196 round global_accuracy is 95.69033397177728
+196 round global Train Loss is 0.14804341119904402
+
+197 round global_accuracy is 93.18390955108879
+197 round global Train Loss is 0.232250583954909
+
+198 round global_accuracy is 93.76296967066882
+198 round global Train Loss is 0.2099688213291485
+
+199 round global_accuracy is 96.29369878092832
+199 round global Train Loss is 0.11563808487504526
+
+200 round global_accuracy is 95.22947550210785
+200 round global Train Loss is 0.1493845710710313
+

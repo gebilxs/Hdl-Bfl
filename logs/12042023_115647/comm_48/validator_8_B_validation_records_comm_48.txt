@@ -1,0 +1,12 @@
+-11.111111111111114: validator 8 B in round 48 evluating worker 1, diff = v_acc:100.0 - w_acc:88.88888888888889 1_maliciousness: B
+-3.555555555555557: validator 8 B in round 48 evluating worker 13, diff = v_acc:100.0 - w_acc:96.44444444444444 13_maliciousness: B
+-75.77777777777777: validator 8 B in round 48 evluating worker 3, diff = v_acc:100.0 - w_acc:24.22222222222222 3_maliciousness: B
+-19.22222222222223: validator 8 B in round 48 evluating worker 10, diff = v_acc:100.0 - w_acc:80.77777777777777 10_maliciousness: B
+-32.33333333333333: validator 8 B in round 48 evluating worker 11, diff = v_acc:100.0 - w_acc:67.66666666666667 11_maliciousness: B
+-4.7777777777777715: validator 8 B in round 48 evluating worker 12, diff = v_acc:100.0 - w_acc:95.22222222222223 12_maliciousness: B
+-5.7777777777777715: validator 8 B in round 48 evluating worker 16, diff = v_acc:100.0 - w_acc:94.22222222222223 16_maliciousness: B
+-1.8888888888888857: validator 8 B in round 48 evluating worker 9, diff = v_acc:100.0 - w_acc:98.11111111111111 9_maliciousness: B
+-78.88888888888889: validator 8 B in round 48 evluating worker 15, diff = v_acc:100.0 - w_acc:21.11111111111111 15_maliciousness: B
+-19.444444444444443: validator 8 B in round 48 evluating worker 17, diff = v_acc:100.0 - w_acc:80.55555555555556 17_maliciousness: B
+-85.0: validator 8 B in round 48 evluating worker 14, diff = v_acc:100.0 - w_acc:15.0 14_maliciousness: B
+-8.777777777777771: validator 8 B in round 48 evluating worker 5, diff = v_acc:100.0 - w_acc:91.22222222222223 5_maliciousness: B

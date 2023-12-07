@@ -1,0 +1,408 @@
+1 round global_accuracy is 0.5250101287372553
+1 round global Train Loss is 2.8382462053383106
+1 rount global auc is 0.0013737650635621424
+
+2 round global_accuracy is 0.6601452320014078
+2 round global Train Loss is 2.3802260390079106
+2 rount global auc is 0.0015083435688071035
+
+3 round global_accuracy is 0.689227451411429
+3 round global Train Loss is 2.235409189586641
+3 rount global auc is 0.0015672385759867458
+
+4 round global_accuracy is 0.691213923633511
+4 round global Train Loss is 2.142435165196265
+4 rount global auc is 0.0016024949665014703
+
+5 round global_accuracy is 0.692914470392546
+5 round global Train Loss is 2.073926474135937
+5 rount global auc is 0.001618065558616982
+
+6 round global_accuracy is 0.711455652381528
+6 round global Train Loss is 1.9685340282836041
+6 rount global auc is 0.0016311238081723012
+
+7 round global_accuracy is 0.7087275649879539
+7 round global Train Loss is 1.8994646096712604
+7 rount global auc is 0.0016367339962569838
+
+8 round global_accuracy is 0.7342822386227894
+8 round global Train Loss is 1.8366190205755537
+8 rount global auc is 0.001644188561521034
+
+9 round global_accuracy is 0.7272459299832805
+9 round global Train Loss is 1.7527126397524246
+9 rount global auc is 0.0016465892240944257
+
+10 round global_accuracy is 0.7268704641674534
+10 round global Train Loss is 1.6707005745704713
+10 rount global auc is 0.0016467522096322933
+
+11 round global_accuracy is 0.7310287295380633
+11 round global Train Loss is 1.5758260906271278
+11 rount global auc is 0.0016485284020479225
+
+12 round global_accuracy is 0.7210511288614285
+12 round global Train Loss is 1.5559815111014883
+12 rount global auc is 0.0016481346085527062
+
+13 round global_accuracy is 0.7244044335999338
+13 round global Train Loss is 1.5345208595752255
+13 rount global auc is 0.0016505139945459262
+
+14 round global_accuracy is 0.7169984441936443
+14 round global Train Loss is 1.4924250827860248
+14 rount global auc is 0.001650139249471616
+
+15 round global_accuracy is 0.7169277228357942
+15 round global Train Loss is 1.504107500897902
+15 rount global auc is 0.0016520255187967372
+
+16 round global_accuracy is 0.7169277228357942
+16 round global Train Loss is 1.4462841432335714
+16 rount global auc is 0.001654299044267424
+
+17 round global_accuracy is 0.7169277228357942
+17 round global Train Loss is 1.442475833395982
+17 rount global auc is 0.0016559458552757784
+
+18 round global_accuracy is 0.7169277228357942
+18 round global Train Loss is 1.4752497408851732
+18 rount global auc is 0.0016579470100618367
+
+19 round global_accuracy is 0.7169277228357943
+19 round global Train Loss is 1.448208547028287
+19 rount global auc is 0.001658898440498455
+
+20 round global_accuracy is 0.7332222099258151
+20 round global Train Loss is 1.4391098671837248
+20 rount global auc is 0.0016568590656113318
+
+21 round global_accuracy is 0.7191956921309791
+21 round global Train Loss is 1.4290406768719959
+21 rount global auc is 0.001654591490776771
+
+22 round global_accuracy is 0.7272557060877134
+22 round global Train Loss is 1.449182119953245
+22 rount global auc is 0.0016549989409909139
+
+23 round global_accuracy is 0.7226513903575656
+23 round global Train Loss is 1.4135467157262291
+23 rount global auc is 0.001652635213343032
+
+24 round global_accuracy is 0.7419087921591896
+24 round global Train Loss is 1.398719948041214
+24 rount global auc is 0.0016543401486948648
+
+25 round global_accuracy is 0.719195692130979
+25 round global Train Loss is 1.42263779326946
+25 rount global auc is 0.0016544801678921063
+
+26 round global_accuracy is 0.7191956921309792
+26 round global Train Loss is 1.4355835836143096
+26 rount global auc is 0.0016540286903620309
+
+27 round global_accuracy is 0.723208253191691
+27 round global Train Loss is 1.4412784418599225
+27 rount global auc is 0.0016562718449669137
+
+28 round global_accuracy is 0.7380386897295128
+28 round global Train Loss is 1.408515523868484
+28 rount global auc is 0.0016579960876751277
+
+29 round global_accuracy is 0.7394338942983198
+29 round global Train Loss is 1.4059981469337504
+29 rount global auc is 0.0016578574248918565
+
+30 round global_accuracy is 0.7412473320472388
+30 round global Train Loss is 1.4118969177614453
+30 rount global auc is 0.001656414455369521
+
+31 round global_accuracy is 0.7372696628218375
+31 round global Train Loss is 1.4421412639312983
+31 rount global auc is 0.001656343464668753
+
+32 round global_accuracy is 0.7496193569471991
+32 round global Train Loss is 1.4089894768353464
+32 rount global auc is 0.0016556434021380844
+
+33 round global_accuracy is 0.7208778906659699
+33 round global Train Loss is 1.4225133178489437
+33 rount global auc is 0.0016558690769606869
+
+34 round global_accuracy is 0.726940559806269
+34 round global Train Loss is 1.4493869943261182
+34 rount global auc is 0.0016561928770473864
+
+35 round global_accuracy is 0.7208429988306594
+35 round global Train Loss is 1.4212387690670043
+35 rount global auc is 0.001657201741519572
+
+36 round global_accuracy is 0.7205220745687851
+36 round global Train Loss is 1.437537871887319
+36 rount global auc is 0.0016615064739540979
+
+37 round global_accuracy is 0.7226873866554367
+37 round global Train Loss is 1.4283237137728089
+37 rount global auc is 0.001660535740024811
+
+38 round global_accuracy is 0.7257273630781289
+38 round global Train Loss is 1.3940257980522175
+38 rount global auc is 0.001660566451576577
+
+39 round global_accuracy is 0.7393907639167872
+39 round global Train Loss is 1.398433761486581
+39 rount global auc is 0.0016592878601478986
+
+40 round global_accuracy is 0.7464081274797401
+40 round global Train Loss is 1.3856378229080561
+40 rount global auc is 0.001659992539105651
+
+41 round global_accuracy is 0.7485388410478935
+41 round global Train Loss is 1.3879740658614632
+41 rount global auc is 0.001666308410518486
+
+42 round global_accuracy is 0.7365047485208582
+42 round global Train Loss is 1.3917051096409492
+42 rount global auc is 0.0016636065390407254
+
+43 round global_accuracy is 0.7415117568221959
+43 round global Train Loss is 1.376615074519023
+43 rount global auc is 0.0016636889746232167
+
+44 round global_accuracy is 0.747087175562483
+44 round global Train Loss is 1.3711245426208205
+44 rount global auc is 0.001666324581590246
+
+45 round global_accuracy is 0.7437092792189273
+45 round global Train Loss is 1.363737143994031
+45 rount global auc is 0.0016662568465771997
+
+46 round global_accuracy is 0.7644745985713336
+46 round global Train Loss is 1.3526384795953952
+46 rount global auc is 0.0016663862853817004
+
+47 round global_accuracy is 0.7723795045181147
+47 round global Train Loss is 1.3480318234856887
+47 rount global auc is 0.001667057465620439
+
+48 round global_accuracy is 0.7687365579814875
+48 round global Train Loss is 1.3626621869884883
+48 rount global auc is 0.001665733426404117
+
+49 round global_accuracy is 0.7575039219152886
+49 round global Train Loss is 1.3830982623011205
+49 rount global auc is 0.0016699488633823533
+
+50 round global_accuracy is 0.7434892962491926
+50 round global Train Loss is 1.4222121033492823
+50 rount global auc is 0.0016697782344877472
+
+51 round global_accuracy is 0.7516867458290929
+51 round global Train Loss is 1.4289218345658674
+51 rount global auc is 0.001670067283776906
+
+52 round global_accuracy is 0.7686323323132811
+52 round global Train Loss is 1.4291001565195403
+52 rount global auc is 0.0016702800110245928
+
+53 round global_accuracy is 0.769288269466438
+53 round global Train Loss is 1.3652731539207423
+53 rount global auc is 0.001669751158522188
+
+54 round global_accuracy is 0.7789513382904738
+54 round global Train Loss is 1.3676178766336462
+54 rount global auc is 0.0016710353929656537
+
+55 round global_accuracy is 0.7744071099987095
+55 round global Train Loss is 1.3803572327412068
+55 rount global auc is 0.0016699721092951435
+
+56 round global_accuracy is 0.76266373485748
+56 round global Train Loss is 1.3832505425692863
+56 rount global auc is 0.0016679355252584773
+
+57 round global_accuracy is 0.7621541600130757
+57 round global Train Loss is 1.4117352451363376
+57 rount global auc is 0.0016654801822474895
+
+58 round global_accuracy is 0.7519723544860445
+58 round global Train Loss is 1.4227853526078236
+58 rount global auc is 0.0016672906333742566
+
+59 round global_accuracy is 0.7562447569712152
+59 round global Train Loss is 1.368934914012305
+59 rount global auc is 0.0016665165880169013
+
+60 round global_accuracy is 0.7532567905468963
+60 round global Train Loss is 1.3791897126972938
+60 rount global auc is 0.0016697322302378608
+
+61 round global_accuracy is 0.7414123985508325
+61 round global Train Loss is 1.357873258491033
+61 rount global auc is 0.0016708068204859996
+
+62 round global_accuracy is 0.7441611044605898
+62 round global Train Loss is 1.3329285692172175
+62 rount global auc is 0.0016720961036478296
+
+63 round global_accuracy is 0.7488256973101708
+63 round global Train Loss is 1.3425039323800123
+63 rount global auc is 0.0016723627831361468
+
+64 round global_accuracy is 0.7631263015807199
+64 round global Train Loss is 1.3398803931706893
+64 rount global auc is 0.0016735132053288255
+
+65 round global_accuracy is 0.7631782525902999
+65 round global Train Loss is 1.3381193635984714
+65 rount global auc is 0.0016743966479057994
+
+66 round global_accuracy is 0.7696843379426312
+66 round global Train Loss is 1.333352040509475
+66 rount global auc is 0.0016735664468454418
+
+67 round global_accuracy is 0.7706525475991797
+67 round global Train Loss is 1.3362457085916977
+67 rount global auc is 0.0016722619243209128
+
+68 round global_accuracy is 0.7736711431301344
+68 round global Train Loss is 1.3367306964328436
+68 rount global auc is 0.0016752435366405277
+
+69 round global_accuracy is 0.7607789719181303
+69 round global Train Loss is 1.3737765294207411
+69 rount global auc is 0.0016753548224008538
+
+70 round global_accuracy is 0.7458931590218103
+70 round global Train Loss is 1.3602741124845115
+70 rount global auc is 0.0016743088953274597
+
+71 round global_accuracy is 0.7627454792020851
+71 round global Train Loss is 1.3778543105864125
+71 rount global auc is 0.0016749172888509117
+
+72 round global_accuracy is 0.7799053899144182
+72 round global Train Loss is 1.3443869849069157
+72 rount global auc is 0.0016756069927825665
+
+73 round global_accuracy is 0.7830644008872472
+73 round global Train Loss is 1.315279735545289
+73 rount global auc is 0.0016750495051787036
+
+74 round global_accuracy is 0.7762753105986946
+74 round global Train Loss is 1.3115257146532635
+74 rount global auc is 0.0016734320313719169
+
+75 round global_accuracy is 0.7735857196447892
+75 round global Train Loss is 1.3224420745352186
+75 rount global auc is 0.0016725708845176032
+
+76 round global_accuracy is 0.7626126270865604
+76 round global Train Loss is 1.3287387440617893
+76 rount global auc is 0.0016737177596018102
+
+77 round global_accuracy is 0.7648122820541523
+77 round global Train Loss is 1.338658175029467
+77 rount global auc is 0.001675214718006121
+
+78 round global_accuracy is 0.7840088719114305
+78 round global Train Loss is 1.3096639821680305
+78 rount global auc is 0.001676757874208966
+
+79 round global_accuracy is 0.7945526180683984
+79 round global Train Loss is 1.2888264797727385
+79 rount global auc is 0.0016777702593765598
+
+80 round global_accuracy is 0.796531725713582
+80 round global Train Loss is 1.2638408125751455
+80 rount global auc is 0.0016800055124323316
+
+81 round global_accuracy is 0.7991215322338918
+81 round global Train Loss is 1.2494661521288453
+81 rount global auc is 0.0016830848723269278
+
+82 round global_accuracy is 0.7867477065286989
+82 round global Train Loss is 1.2338350001945293
+82 rount global auc is 0.0016845636151754002
+
+83 round global_accuracy is 0.7833999943714677
+83 round global Train Loss is 1.2599677960920228
+83 rount global auc is 0.0016843698149770722
+
+84 round global_accuracy is 0.7931577972466588
+84 round global Train Loss is 1.2475440300710379
+84 rount global auc is 0.0016854253568862395
+
+85 round global_accuracy is 0.7938257285570849
+85 round global Train Loss is 1.2400505636569281
+85 rount global auc is 0.0016858551965508646
+
+86 round global_accuracy is 0.7829700292778738
+86 round global Train Loss is 1.2253477810681421
+86 rount global auc is 0.0016854030381713303
+
+87 round global_accuracy is 0.7815847636337347
+87 round global Train Loss is 1.2402851984650027
+87 rount global auc is 0.0016836758824873923
+
+88 round global_accuracy is 0.7616583141306081
+88 round global Train Loss is 1.2289549462256533
+88 rount global auc is 0.0016845300089283206
+
+89 round global_accuracy is 0.7684893850553364
+89 round global Train Loss is 1.2380925134988563
+89 rount global auc is 0.0016838829245244516
+
+90 round global_accuracy is 0.7931481338016223
+90 round global Train Loss is 1.2016445777689604
+90 rount global auc is 0.0016847269304450952
+
+91 round global_accuracy is 0.8032717324323968
+91 round global Train Loss is 1.195170696610036
+91 rount global auc is 0.0016848737635795808
+
+92 round global_accuracy is 0.7842418784784382
+92 round global Train Loss is 1.1972226162104591
+92 rount global auc is 0.0016857551204779852
+
+93 round global_accuracy is 0.7912890333881444
+93 round global Train Loss is 1.2137261258153464
+93 rount global auc is 0.0016845716132519156
+
+94 round global_accuracy is 0.7983627388124227
+94 round global Train Loss is 1.205535390610429
+94 rount global auc is 0.0016851122528721153
+
+95 round global_accuracy is 0.7985696240205742
+95 round global Train Loss is 1.2056299979404383
+95 rount global auc is 0.0016847806755828586
+
+96 round global_accuracy is 0.8084706836802761
+96 round global Train Loss is 1.1819070009778048
+96 rount global auc is 0.0016845352389846194
+
+97 round global_accuracy is 0.8156437783034148
+97 round global Train Loss is 1.1723176381366733
+97 rount global auc is 0.0016836883212608795
+
+98 round global_accuracy is 0.8028154657890779
+98 round global Train Loss is 1.157539415339072
+98 rount global auc is 0.0016831141222063343
+
+99 round global_accuracy is 0.8066896572641353
+99 round global Train Loss is 1.1496175397431596
+99 rount global auc is 0.0016826042412355744
+
+100 round global_accuracy is 0.8089008642380143
+100 round global Train Loss is 1.1795650851817834
+100 rount global auc is 0.0016825668406260739
+
+101 round global_accuracy is 0.7979155723433042
+101 round global Train Loss is 1.1742917196565839
+101 rount global auc is 0.0016816274079275869
+
+102 round global_accuracy is 0.8071037479901306
+102 round global Train Loss is 1.1450421744354384
+102 rount global auc is 0.0016815339220996272
+

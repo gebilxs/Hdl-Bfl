@@ -1,0 +1,12 @@
+0.9111617312073008: validator 18 B in round 170 evluating worker 1, diff = v_acc:98.48139711465451 - w_acc:99.39255884586181 1_maliciousness: B
+-98.17767653758541: validator 18 B in round 170 evluating worker 13, diff = v_acc:98.48139711465451 - w_acc:0.30372057706909644 13_maliciousness: B
+-78.66362946089598: validator 18 B in round 170 evluating worker 3, diff = v_acc:98.48139711465451 - w_acc:19.81776765375854 3_maliciousness: B
+-80.334092634776: validator 18 B in round 170 evluating worker 0, diff = v_acc:98.48139711465451 - w_acc:18.14730447987851 0_maliciousness: B
+-90.50873196659073: validator 18 B in round 170 evluating worker 11, diff = v_acc:98.48139711465451 - w_acc:7.972665148063781 11_maliciousness: B
+-89.21791951404707: validator 18 B in round 170 evluating worker 8, diff = v_acc:98.48139711465451 - w_acc:9.263477600607441 8_maliciousness: B
+-72.28549734244494: validator 18 B in round 170 evluating worker 10, diff = v_acc:98.48139711465451 - w_acc:26.195899772209568 10_maliciousness: B
+-80.18223234624145: validator 18 B in round 170 evluating worker 16, diff = v_acc:98.48139711465451 - w_acc:18.29916476841306 16_maliciousness: B
+-96.43128321943811: validator 18 B in round 170 evluating worker 12, diff = v_acc:98.48139711465451 - w_acc:2.050113895216401 12_maliciousness: B
+-94.6848899012908: validator 18 B in round 170 evluating worker 17, diff = v_acc:98.48139711465451 - w_acc:3.7965072133637054 17_maliciousness: B
+-98.02581624905086: validator 18 B in round 170 evluating worker 5, diff = v_acc:98.48139711465451 - w_acc:0.45558086560364464 5_maliciousness: B
+-80.18223234624145: validator 18 B in round 170 evluating worker 19, diff = v_acc:98.48139711465451 - w_acc:18.29916476841306 19_maliciousness: B

@@ -1,0 +1,26 @@
+6 worker B: 72.61146496815287
+2 worker B: 16.666666666666668
+8 worker B: 92.66666666666667
+11 worker B: 88.97136797454931
+16 worker B: 95.92061742006615
+13 worker B: 48.87640449438202
+17 worker B: 68.31683168316832
+7 worker B: 79.24528301886792
+5 worker B: 90.18087855297158
+18 worker B: 24.297646165527716
+15 worker B: 88.39941262848753
+0 worker B: 90.88145896656535
+19 miner B: 86.30406290956749
+9 miner B: 74.35129740518963
+4 miner B: 79.58333333333333
+3 validator B: 52.20125786163522
+10 validator B: 49.6790757381258
+1 validator B: 25.6
+14 validator B: 60.781577110956036
+12 validator B: 7.300884955752212
+comm_round_block_gen_time: No valid block has been generated this round.
+slowest_device_round_ends_time: 0.32818078994750977
+mining_consensus: PoS 0
+forking_happened: False
+comm_round_spent_time_on_this_machine: 32.09824800491333
+block_mined_by: 19 B
