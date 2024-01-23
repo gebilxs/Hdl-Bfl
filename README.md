@@ -33,3 +33,4 @@ utils
 - env_cuda_latest.yaml 需要安装的文件内容
 - example_sh.sh shell脚本后台运行代码，跑baseline
 ```
+更小的alpha意味着更高的分散程度

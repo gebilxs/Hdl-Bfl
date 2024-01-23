@@ -10,6 +10,7 @@ import copy
 from collections import defaultdict
 from sklearn.preprocessing import label_binarize
 from sklearn import metrics
+import torch.nn.functional as F
 class Worker(Device):
     def __init__(self, args, id, train_samples, test_samples, **kwargs):
         super().__init__(args, id, train_samples, test_samples, **kwargs)
@@ -185,13 +186,19 @@ class Worker(Device):
 
                 # Forward pass
                 output = self.model(x)
+                probabilities = F.softmax(output,dim=1)
+                confidence,_ = torch.max(probabilities,dim=1)
+                # 确保confidence和计算图无关
+                confidence = confidence.detach()
+                self.local_updates_rewards_per_transaction += self.compute_reward_based_on_confidence(confidence,y.shape[0])
+                
                 loss = self.loss(output, y)
 
                 if self.global_logits != None:
                     logit_new = copy.deepcopy(output.detach())
                     for i, yy in enumerate(y):
                         y_c = yy.item()
-                        if type(self.global_logits[y_c]) != type([]):
+                        if y_c in self.global_logits and  type(self.global_logits[y_c]) != type([]):
                             logit_new[i, :] = self.global_logits[y_c].data
                     loss += self.loss_mse(logit_new, output) * self.lamda
 
@@ -207,7 +214,7 @@ class Worker(Device):
                 self.optimizer.step()
 
                 # Update rewards
-                self.local_updates_rewards_per_transaction += rewards * (y.shape[0])
+                # self.local_updates_rewards_per_transaction += rewards * (y.shape[0])
 
         # record accuracies to find good -vh
             # with open(f"{log_files_folder_path_comm_round}/worker_{self.idx}_{is_malicious_node}_local_updating_accuracies_comm_{comm_round}.txt", "a") as file:
@@ -224,10 +231,17 @@ class Worker(Device):
 
         # 如果是恶意节点增加噪声
         if self.is_malicious:
-            self.net.apply(self.malicious_worker_add_noise_to_weights)
-            print(f"malicious worker {self.idx} has added noise to its local updated weights before transmitting")
+            self.noise_variance = 0.1  # 设置噪声强度
+            self.device = 'cuda'  # 或 'cpu'，取决于你的设备
+            self.add_noise()  # 对模型权重添加噪声
+            print(f"malicious worker {self.id} has added noise to its local updated weights before transmitting")
             with open(f"{log_files_folder_path_comm_round}/comm_{comm_round}_variance_of_noises.txt", "a") as file:
                 file.write(f"{self.return_id()} {self.return_role()} {is_malicious_node} noise variances: {self.variance_of_noises}\n")
+            with open(f"{log_files_folder_path_comm_round}/comm_{comm_round}_mLogits.txt", "a") as file:
+                file.write(f"{self.return_id()} {self.return_role()} logits:{self.logits}\n")
+        else:
+            with open(f"{log_files_folder_path_comm_round}/comm_{comm_round}_Logits.txt", "a") as file:
+                file.write(f"{self.return_id()} {self.return_role()} logits:{self.logits}\n")
         # record accuracies to find good -vh
 
         # TODO 记录日志
@@ -289,10 +303,72 @@ class Worker(Device):
         y_prob = np.concatenate(y_prob, axis=0)
         y_true = np.concatenate(y_true, axis=0)
 
-        auc = metrics.roc_auc_score(y_true, y_prob, average='micro')
+        # auc = metrics.roc_auc_score(y_true, y_prob, average='micro')
+        auc = 0
         
         # return test_acc, test_num, auc
         print(f"worker {self.id} acc is {test_acc/test_num}")
+
+
+    def compute_reward_based_on_confidence(self,confidence, num_samples, reward_strategy="adaptive", 
+                                        strategy_params=None):
+        """
+        根据置信度动态计算奖励。
+
+        :param confidence: 预测的置信度。
+        :param num_samples: 处理的样本数量。
+        :param reward_strategy: 奖励策略，可以是 'high_confidence', 'low_confidence' 或 'adaptive'。
+        :param strategy_params: 策略参数，用于动态调整奖励。
+        :return: 计算得到的奖励。
+        """
+        base_reward = 1  # 基础奖励值，可以根据需要调整
+        mean_confidence = torch.mean(confidence)
+        base_num = 10
+        if reward_strategy == "high_confidence":
+            reward = base_reward * mean_confidence * num_samples
+        elif reward_strategy == "low_confidence":
+            reward = base_reward * (1 - mean_confidence) * num_samples
+        elif reward_strategy == "adaptive":
+            # 动态调整奖励策略
+            if strategy_params is None:
+                strategy_params = {'threshold': 0.5, 'high_weight': 1, 'low_weight': 1}
+            threshold = strategy_params.get('threshold', 0.5)
+            high_weight = strategy_params.get('high_weight', 1)
+            low_weight = strategy_params.get('low_weight', 1)
+
+            if mean_confidence > threshold:
+                # 高于阈值时，倾向于奖励高置信度
+                reward = (base_reward * high_weight * mean_confidence * num_samples)/base_num
+            else:
+                # 低于阈值时，倾向于奖励低置信度
+                reward = (base_reward * low_weight * (1 - mean_confidence) * num_samples)/base_num
+        else:
+            raise ValueError("Unknown reward strategy")
+
+        return reward
+    
+    def malicious_worker_add_noise_to_weights(self, m):
+        """
+        添加噪声到模型权重。
+        只对特定类型的层（例如卷积层和全连接层）添加噪声。
+        """
+        with torch.no_grad():
+            # 只对卷积层和全连接层添加噪声
+            if isinstance(m, (nn.Conv2d, nn.Linear)):
+                noise = self.noise_variance * torch.randn(m.weight.size(), device=self.device)
+                variance_of_noise = torch.var(noise)
+                m.weight.add_(noise)
+                self.variance_of_noises.append(float(variance_of_noise))
+                # 如果需要，也可以给bias添加噪声
+                if m.bias is not None:
+                    noise_bias = self.noise_variance * torch.randn(m.bias.size(), device=self.device)
+                    m.bias.add_(noise_bias)
+ 
+    def add_noise(self):
+        """
+        遍历模型的所有层，对特定层添加噪声。
+        """
+        self.model.apply(self.malicious_worker_add_noise_to_weights)
 
 def agg_func(logits):
     """

@@ -8,6 +8,7 @@ import torch.nn as nn
 from torch import optim
 from hashlib import sha256
 
+import numpy as np
 class Validator(Device):
     def __init__(self, args, id, train_samples, test_samples, **kwargs):
         super().__init__(args, id, train_samples, test_samples, **kwargs)
@@ -48,7 +49,7 @@ class Validator(Device):
             optimizer=self.validator_optimizer, 
             gamma=args.learning_rate_decay_gamma
         )
-
+        self.logits = None
     def validator_reset_vars_for_new_round(self):
         self.validation_rewards_this_round = 0
         # self.accuracies_this_round = {}
@@ -172,6 +173,7 @@ class Validator(Device):
     def return_final_transactions_validating_queue(self):
         return self.final_transactions_queue_to_validate
     
+    # model acc verify method! 
     def validator_update_model_by_one_epoch_and_validate_local_accuracy(self):
         # return time spent
         print(f"validator {self.id} is performing one epoch of local update and validation")
@@ -235,7 +237,83 @@ class Validator(Device):
         
         print(f"Validator - {self.id} Test Loss: {average_loss:.4f}, Test Accuracy: {accuracy:.2f}%")
 
-    def validate_worker_transaction(self, transaction_to_validate, rewards, log_files_folder_path, comm_round, malicious_validator_on):
+    def validate_worker_transaction_by_logits(self, transaction_to_validate, rewards, log_files_folder_path, comm_round, malicious_validator_on):
+        log_files_folder_path_comm_round = f"{log_files_folder_path}/comm_{comm_round}"
+        if self.computation_power == 0:
+            print(f"validator {self.id} has computation power 0 and will not be able to validate this transaction in time")
+            return False, False
+        else:
+            worker_transaction_device_idx = transaction_to_validate['worker_device_idx']
+            if worker_transaction_device_idx in self.black_list:
+                print(f"{worker_transaction_device_idx} is in validator's blacklist. Trasaction won't get validated.")
+                return False, False
+            validation_time = time.time()
+            if self.check_signature:
+                transaction_before_signed = copy.deepcopy(transaction_to_validate)
+                del transaction_before_signed["worker_signature"]
+                modulus = transaction_to_validate['worker_rsa_pub_key']["modulus"]
+                pub_key = transaction_to_validate['worker_rsa_pub_key']["pub_key"]
+                signature = transaction_to_validate["worker_signature"]
+                # begin validation
+                # 1 - verify signature
+                hash = int.from_bytes(sha256(str(sorted(transaction_before_signed.items())).encode('utf-8')).digest(), byteorder='big')
+                hashFromSignature = pow(signature, pub_key, modulus)
+                if hash == hashFromSignature:
+                    print(f"Signature of transaction from worker {worker_transaction_device_idx} is verified by validator {self.id}!")
+                    transaction_to_validate['worker_signature_valid'] = True
+                else:
+                    print(f"Signature invalid. Transaction from worker {worker_transaction_device_idx} does NOT pass verification.")
+                    # will also add sig not verified transaction due to the validator's verification effort and its rewards needs to be recorded in the block
+                    transaction_to_validate['worker_signature_valid'] = False
+            else:
+                print(f"Signature of transaction from worker {worker_transaction_device_idx} is verified by validator {self.id}!")
+                transaction_to_validate['worker_signature_valid'] = True
+            # 2 - validate worker's local_updates_params if worker's signature is valid
+            if transaction_to_validate['worker_signature_valid']:
+                # accuracy validated by worker's update
+                # TODO judge by logits
+                self.logits = self.Get_validator_logits()
+                worker_logits = transaction_to_validate['logits']
+                distance = self.compute_logits_distance(self.logits, worker_logits)
+                # Record distance in log file
+                with open(f"{log_files_folder_path_comm_round}/distance_log.txt", 'a') as file:
+                    file.write(f"Validator {self.id} - Worker {worker_transaction_device_idx} Distance: {distance}\n")
+                # TODO vote by logits
+                if 1 > self.validator_threshold:
+                    transaction_to_validate['update_direction'] = False
+                    print(f"NOTE: worker {worker_transaction_device_idx}'s updates is deemed as suspiciously malicious by validator {self.id}")
+                else:
+                    transaction_to_validate['update_direction'] = True
+                    print(f"worker {worker_transaction_device_idx}'s' updates is deemed as GOOD by validator {self.id}")
+                    if self.is_malicious and malicious_validator_on:
+                        old_voting = transaction_to_validate['update_direction']
+                        transaction_to_validate['update_direction'] = not transaction_to_validate['update_direction']
+                        with open(f"{log_files_folder_path_comm_round}/malicious_validator_log.txt", 'a') as file:
+                            file.write(f"malicious validator {self.id} has flipped the voting of worker {worker_transaction_device_idx} from {old_voting} to {transaction_to_validate['update_direction']} in round {comm_round}\n")
+                    transaction_to_validate['validation_rewards'] = rewards
+                
+            else:
+                transaction_to_validate['update_direction'] = 'N/A'
+                transaction_to_validate['validation_rewards'] = 0
+            transaction_to_validate['validation_done_by'] = self.id
+            validation_time = (time.time() - validation_time)/self.computation_power
+            transaction_to_validate['validation_time'] = validation_time
+            transaction_to_validate['validator_rsa_pub_key'] = self.return_rsa_pub_key()
+            # assume signing done in negligible time
+            transaction_to_validate["validator_signature"] = self.sign_msg(sorted(transaction_to_validate.items()))
+
+            return validation_time, transaction_to_validate
+
+    def vote_worker_transaction_by_logits(self, transaction_to_validate, rewards, log_files_folder_path, comm_round, malicious_validator_on,avg_dis,list_distance,num):
+        log_files_folder_path_comm_round = f"{log_files_folder_path}/comm_{comm_round}"
+        worker_transaction_device_idx = transaction_to_validate['worker_device_idx']
+        
+        
+        validation_time = (time.time() - validation_time)/self.computation_power
+        return validation_time, transaction_to_validate
+        
+    
+    def validate_worker_transaction(self,transaction_to_validate,rewards,log_files_folder_path,comm_round,malicious_validator_on):
         log_files_folder_path_comm_round = f"{log_files_folder_path}/comm_{comm_round}"
         if self.computation_power == 0:
             print(f"validator {self.id} has computation power 0 and will not be able to validate this transaction in time")
@@ -276,12 +354,6 @@ class Validator(Device):
                 # print(f'validator updated model accuracy - {self.validator_local_accuracy}')
                 # print(f"After applying worker's update, model accuracy becomes - {accuracy_by_worker_update_using_own_data}")
                 # record their accuracies and difference for choosing a good validator threshold
-                is_malicious_validator = "M" if self.is_malicious else "B"
-                with open(f"{log_files_folder_path_comm_round}/validator_{self.id}_{is_malicious_validator}_validation_records_comm_{comm_round}.txt", "a") as file:
-                    is_malicious_node = "M" if self.devices_dict[worker_transaction_device_idx].return_is_malicious() else "B"
-                    file.write(f"{accuracy_by_worker_update_using_own_data - self.validator_local_accuracy}: validator {self.return_id()} {is_malicious_validator} in round {comm_round} evluating worker {worker_transaction_device_idx}, diff = v_acc:{self.validator_local_accuracy} - w_acc:{accuracy_by_worker_update_using_own_data} {worker_transaction_device_idx}_maliciousness: {is_malicious_node}\n")
-                
-                print(f"两者差为：{accuracy_by_worker_update_using_own_data - self.validator_local_accuracy}")
 
                 if accuracy_by_worker_update_using_own_data - self.validator_local_accuracy < (self.validator_threshold * -100):
                     transaction_to_validate['update_direction'] = False
@@ -324,9 +396,7 @@ class Validator(Device):
             transaction_to_validate["validator_signature"] = self.sign_msg(sorted(transaction_to_validate.items()))
             return validation_time, transaction_to_validate
 
-    # 通过worker的模型参数在validator上面进行验证
     def validate_model_weights(self, weights_to_eval=None):
-        # 不一定一定是这个model
         validator_worker_model = self.model
         testloader = self.load_test_data()
         validator_worker_model.eval()
@@ -368,3 +438,61 @@ class Validator(Device):
 
     def return_post_validation_transactions_queue(self):
         return self.post_validation_transactions_queue
+    
+    def Get_validator_logits(self):
+        trainloader = self.load_train_data()
+        self.model.eval()
+        logits = {}
+        local_epochs = 1
+        for step in range(local_epochs):
+            for i, (x, y) in enumerate(trainloader):
+                # Data to device
+                x = x.to(self.device)
+                y = y.to(self.device)
+
+                # Forward pass
+                with torch.no_grad():  # Ensure no gradient is computed
+                    output = self.model(x)
+                    for i, yy in enumerate(y):
+                        y_c = yy.item()
+                        if y_c not in logits:
+                            logits[y_c] = []
+                        logits[y_c].append(output[i, :].cpu().numpy())  # Store logits
+        
+        return agg_func(logits)
+
+    def compute_logits_distance(self, logits_v, logits_w):
+        total_distance = 0
+        sorted_labels_v = sorted(logits_v.keys())
+        sorted_labels_w = sorted(logits_w.keys())
+
+        for label in sorted_labels_v:
+            if label in sorted_labels_w:
+                # 确保张量在CPU上，并转换为numpy数组
+                v = logits_v[label].cpu().numpy()
+                w = logits_w[label].cpu().numpy()
+                # 计算每个标签对应张量的欧几里得距离
+                distance = np.linalg.norm(v - w)
+                total_distance += distance
+        return total_distance
+    
+def agg_func(logits):
+    """
+    Returns the average of the weights.
+    """
+
+    for label, logit_list in logits.items():
+        if len(logit_list) > 1:
+            # Initialize a tensor with zeros having the same shape as the first logit
+            logit = torch.zeros_like(torch.tensor(logit_list[0]))
+
+            # Sum all logits
+            for i in logit_list:
+                logit += torch.tensor(i)  # Convert each logit to a PyTorch tensor
+
+            # Average the sum
+            logits[label] = logit / len(logit_list)
+        else:
+            logits[label] = torch.tensor(logit_list[0])  # Convert to PyTorch tensor
+
+    return logits

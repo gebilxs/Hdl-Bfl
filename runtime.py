@@ -184,7 +184,6 @@ def run(args):
 
 		# 12. setup the mining consensus
         mining_consensus = 'PoW' if args.pow_difficulty else 'PoS'
-        print("Finish")
 
 	# create malicious worker identification database
     conn = sqlite3.connect(f'{log_files_folder_path}/malicious_wokrer_identifying_log.db')
@@ -236,6 +235,7 @@ def run(args):
                 # set logits
                 worker.set_deviceL_to_worker(device.used_global_logits)
                 worker.model = device.model
+                worker.is_malicious=device.is_malicious
                 workers_this_round.append(worker)
                 workers_to_assign-=1
             elif miners_to_assign:
@@ -438,10 +438,10 @@ def run(args):
                                 records_dict[worker][update_iter]['arrival_time'] = total_time_tracker
                                 if validator.online_switcher():
 									# accept this transaction only if the validator is online
-                                    print(f"validator {validator.return_idx()} has accepted this transaction.")
+                                    print(f"validator {validator.return_id()} has accepted this transaction.")
                                     transaction_arrival_queue[total_time_tracker] = unverified_transaction
                                 else:
-                                    print(f"validator {validator.return_idx()} offline and unable to accept this transaction")
+                                    print(f"validator {validator.return_id()} offline and unable to accept this transaction")
                             else:
 								# worker goes offline and skip updating for one transaction, wasted the time of one update and transmission
                                 wasted_update_time, wasted_update_params = worker.waste_one_epoch_local_update_time(args['optimizer'])
@@ -466,6 +466,7 @@ def run(args):
                     if not worker.return_id() in validator.return_black_list():
                         print(f'worker {worker_iter+1}/{len(associated_workers)} of validator {validator.return_id()} is doing local updates')	 
                         if worker.online_switcher():
+                            # FedDistill 
                             local_update_spent_time = worker.FedDistill_worker_local_update(rewards, log_files_folder_path_comm_round, comm_round, local_epochs=args.local_epochs)
                             worker_link_speed = worker.return_link_speed()
                             lower_link_speed = validator_link_speed if validator_link_speed < worker_link_speed else worker_link_speed
@@ -523,21 +524,38 @@ def run(args):
             final_transactions_arrival_queue = validator.return_final_transactions_validating_queue()
             if final_transactions_arrival_queue:
 				# validator asynchronously does one epoch of update and validate on its own test set
-                local_validation_time = validator.validator_update_model_by_one_epoch_and_validate_local_accuracy()
+                # TODO verify logits messages
+                # local_validation_time = validator.validator_update_model_by_one_epoch_and_validate_local_accuracy()
                 print(f"{validator.return_id()} - validator {validator_iter+1}/{len(validators_this_round)} is validating received worker transactions...")
                 # Check every transaction 
+                list_distance =[]
+                queue_unconfirmmed = []
                 for (arrival_time, unconfirmmed_transaction) in final_transactions_arrival_queue:
                     if validator.online_switcher():
 						# validation won't begin until validator locally done one epoch of update and validation(worker transactions will be queued)
-                        if arrival_time < local_validation_time:
-                            arrival_time = local_validation_time
-                        validation_time, post_validation_unconfirmmed_transaction = validator.validate_worker_transaction(unconfirmmed_transaction, rewards, log_files_folder_path, comm_round, args.malicious_validator_on)
+                        # if arrival_time < local_validation_time:
+                        #     arrival_time = local_validation_time
+                        # TODO new validation function
+                        validation_time, post_validation_unconfirmmed_transaction = validator.validate_worker_transaction_by_logits(unconfirmmed_transaction, rewards, log_files_folder_path, comm_round, args.malicious_validator_on)
+                        # list_distance.append(distance)
+                        # queue_unconfirmmed.append(post_validation_unconfirmmed_transaction1)
                         if validation_time:
                             validator.add_post_validation_transaction_to_queue((arrival_time + validation_time, validator.return_link_speed(), post_validation_unconfirmmed_transaction))
                             print(f"A validation process has been done for the transaction from worker {post_validation_unconfirmmed_transaction['worker_device_idx']} by validator {validator.return_id()}")
-                            print()
                     else:
                         print(f"A validation process is skipped for the transaction from worker {post_validation_unconfirmmed_transaction['worker_device_idx']} by validator {validator.return_id()} due to validator offline.")
+                
+                # avg_dis = sum(list_distance)/len(list_distance)
+                # num =0
+                # for (post_validation_unconfirmmed_transaction1) in queue_unconfirmmed:
+                #     if validator.online_switcher():
+                #         # TODO message validation add hash 
+                        
+                #         validation_time, post_validation_unconfirmmed_transaction = validator.vote_worker_transaction_by_logits(post_validation_unconfirmmed_transaction1, rewards, log_files_folder_path, comm_round, args.malicious_validator_on )
+                        # if validation_time:
+                        #     validator.add_post_validation_transaction_to_queue((arrival_time + validation_time, validator.return_link_speed(), post_validation_unconfirmmed_transaction))
+                        #     print(f"A validation process has been done for the transaction from worker {post_validation_unconfirmmed_transaction['worker_device_idx']} by validator {validator.return_id()}")
+
             else:
                 print(f"{validator.return_id()} - validator {validator_iter+1}/{len(validators_this_round)} did not receive any transaction from worker or validator in this round.")
             
@@ -820,7 +838,25 @@ def run(args):
                         # print()
             else:
                 device.use_logit_train()
+        
+        print("stake decay")
+        sorted_devices = sorted(devices_list, key=lambda d: d.return_stake(), reverse=True)
 
+        # 定义衰减因子列表
+        decay_factors = [0.6, 0.7, 0.8, 0.85, 0.9]
+
+        # 对每个设备应用衰减因子
+        for i, device in enumerate(sorted_devices):
+            if i < len(decay_factors):
+                decay_factor = decay_factors[i]
+            else:
+                decay_factor = decay_factors[-1]  # 对于列表之外的设备，使用最后一个衰减因子
+
+            # 应用衰减
+            original_stake = device.return_stake()
+            decayed_stake = original_stake * decay_factor
+            device.set_stake(decayed_stake)  # 假设有 set_stake 方法来更新设备的奖励值
+            
         print(''' Logging Accuracies by Devices ''')
         evaluate_global_acc = []
         evaluate_global_train_loss = []
@@ -892,12 +928,10 @@ def run(args):
                 file.write(f"block_mined_by: Forking happened\n")
 
         print(''' Logging Stake by Devices ''')
-        # TODO
-        # for device in devices_list:
-        #     device.accuracy_this_round = device.validate_model_weights()
-        #     with open(f"{log_files_folder_path_comm_round}/stake_comm_{comm_round}.txt", "a") as file:
-        #         is_malicious_node = "M" if device.return_is_malicious() else "B"
-        #         file.write(f"{device.return_id()} {device.return_role()} {is_malicious_node}: {device.return_stake()}\n")
+        for device in devices_list:
+            with open(f"{log_files_folder_path_comm_round}/stake_comm_{comm_round}.txt", "a") as file:
+                is_malicious_node = "M" if device.return_is_malicious() else "B"
+                file.write(f"{device.return_id()} {device.return_role()} {is_malicious_node}: {device.return_stake()}\n")
 
 		# a temporary workaround to free GPU mem by delete txs stored in the blocks. Not good when need to resync chain
         if args.destroy_tx_in_block:

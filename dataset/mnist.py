@@ -12,7 +12,7 @@ random.seed(1)
 np.random.seed(1)
 num_clients = 20
 num_classes = 10
-dir_path = "mnist/"
+dir_path = "mnist-0.1/"
 
 
 # Allocate data to users
