@@ -153,6 +153,9 @@ class Device(object):
     def return_stake(self):
         return self.rewards
 
+    def set_stake(self,decayed_stake):
+        self.rewards = decayed_stake
+        
     def return_computation_power(self):
         return self.computation_power
 
@@ -252,8 +255,8 @@ class Device(object):
         y_prob = np.concatenate(y_prob, axis=0)
         y_true = np.concatenate(y_true, axis=0)
 
-        auc = metrics.roc_auc_score(y_true, y_prob, average='micro')
-        
+        # auc = metrics.roc_auc_score(y_true, y_prob, average='micro')
+        auc =0
         return test_acc, test_num, auc
 
     # def train_metrics(self):
@@ -302,7 +305,7 @@ class Device(object):
                     logit_new = copy.deepcopy(output.detach())
                     for i, yy in enumerate(y):
                         y_c = yy.item()
-                        if type(self.global_logits[y_c]) != type([]):
+                        if y_c in self.global_logits and type(self.global_logits[y_c]) != type([]):
                             logit_new[i, :] = self.global_logits[y_c].data
                     loss += self.loss_mse(logit_new, output) * self.lamda
                     
@@ -645,12 +648,14 @@ class Device(object):
                             # -------------------------------------------------------------
                             valid_transactions_records_by_worker[worker_device_idx]['train_samples'] = int
                             valid_transactions_records_by_worker[worker_device_idx]['logits'] = {}
+                            valid_transactions_records_by_worker[worker_device_idx]['local_updates_rewards'] = float
                         # epoch of this worker's local update
                         local_epoch_seq = valid_validator_sig_worker_transaciton['local_total_accumulated_epochs_this_round']
                         positive_direction_validators = valid_validator_sig_worker_transaciton['positive_direction_validators']
                         negative_direction_validators = valid_validator_sig_worker_transaciton['negative_direction_validators']
                         worker_train_sample = valid_validator_sig_worker_transaciton['train_samples']
                         worker_logits = valid_validator_sig_worker_transaciton['logits']
+                        worker_reward = valid_validator_sig_worker_transaciton['local_updates_rewards']
                         if len(positive_direction_validators) >= len(negative_direction_validators):
                             # worker transaction can be used
                             valid_transactions_records_by_worker[worker_device_idx]['positive_epochs'].add(local_epoch_seq)
@@ -658,6 +663,7 @@ class Device(object):
                             # -----------------------------------------------------------------
                             valid_transactions_records_by_worker[worker_device_idx]['train_samples']=worker_train_sample
                             valid_transactions_records_by_worker[worker_device_idx]['logits'].update(worker_logits)
+                            valid_transactions_records_by_worker[worker_device_idx]['local_updates_rewards'] = worker_reward
                             # see if this is the latest epoch from this worker
                             if local_epoch_seq == max(valid_transactions_records_by_worker[worker_device_idx]['all_valid_epochs']):
                                 valid_transactions_records_by_worker[worker_device_idx]['finally_used_params'] = valid_validator_sig_worker_transaciton['local_updates_params']
@@ -780,7 +786,7 @@ class Device(object):
                     is_worker_malicious = self.devices_dict[worker_device_idx].return_is_malicious()
                     if local_params_record['finally_used_params']:
                         # identified as benigh worker
-                        finally_used_local_params.append((worker_device_idx, local_params_record['finally_used_params'],local_params_record['train_samples'],local_params_record['logits'])) # could be None
+                        finally_used_local_params.append((worker_device_idx, local_params_record['finally_used_params'],local_params_record['train_samples'],local_params_record['logits'],local_params_record['local_updates_rewards'])) # could be None
                         if not is_worker_malicious:
                             TP += 1
                         else:
@@ -795,6 +801,7 @@ class Device(object):
 
                 if self.online_switcher():
                         # self.global_update(finally_used_local_params)
+
                         self.global_logits=self.logits_update(finally_used_local_params)
                         self.set_logits(self.global_logits)
                 else:
@@ -892,29 +899,56 @@ class Device(object):
             print(f"global updates done by {self.id}")
         else:
             print(f"There are no available local params for {self.id} to perform global updates in this comm round.")
+    # normal logits_update
 
-    def logits_update(self,used_message):
+    # def logits_update(self,used_message):
+    #     agg_logits_label = defaultdict(list)
+    #     local_logits_list =[]
+    #     worker_device_list =[]
+    #     for(worker_device_idx,worker_model,train_sample,upload_logits) in used_message:
+    #         local_logits_list.append(upload_logits)
+    #         worker_device_list.append(worker_device_idx)
+    #     for local_logits in local_logits_list:
+    #         for label in local_logits.keys():
+    #             agg_logits_label[label].append(local_logits[label])
+
+    #     for [label, logit_list] in agg_logits_label.items():
+    #         if len(logit_list) > 1:
+    #             logit = 0 * logit_list[0].data
+    #             for i in logit_list:
+    #                 logit += i.data
+    #             agg_logits_label[label] = logit / len(logit_list)
+    #         else:
+    #             agg_logits_label[label] = logit_list[0].data
+
+    #     return dict(agg_logits_label)
+    
+    def logits_update(self, used_message):
         agg_logits_label = defaultdict(list)
-        local_logits_list =[]
-        worker_device_list =[]
-        for(worker_device_idx,worker_model,train_sample,upload_logits) in used_message:
-            local_logits_list.append(upload_logits)
-            worker_device_list.append(worker_device_idx)
-        for local_logits in local_logits_list:
-            for label in local_logits.keys():
-                agg_logits_label[label].append(local_logits[label])
+        local_logits_list = []
+        worker_stakes = []
 
-        for [label, logit_list] in agg_logits_label.items():
-            if len(logit_list) > 1:
-                logit = 0 * logit_list[0].data
-                for i in logit_list:
-                    logit += i.data
-                agg_logits_label[label] = logit / len(logit_list)
-            else:
-                agg_logits_label[label] = logit_list[0].data
+        # 收集logits和stakes
+        for (worker_device_idx, worker_model, train_sample, upload_logits, reward) in used_message:
+            local_logits_list.append(upload_logits)
+            worker_stakes.append(reward)  # 使用reward作为奖励值
+
+        # 对奖励值进行标准化处理
+        max_stake = max(worker_stakes) if worker_stakes else 1
+        normalized_stakes = [stake / max_stake for stake in worker_stakes]
+
+        # 加权聚合logits
+        for local_logits, stake in zip(local_logits_list, normalized_stakes):
+            for label, logit in local_logits.items():
+                weighted_logits = logit * stake
+                agg_logits_label[label].append(weighted_logits)
+
+        # 计算最终的聚合logits
+        for label, logit_list in agg_logits_label.items():
+            agg_logits_label[label] = sum(logit_list) / len(logit_list)
 
         return dict(agg_logits_label)
-    
+
     def set_logits(self,global_logits):
         self.used_global_logits = copy.deepcopy(global_logits)
 
@@ -934,7 +968,7 @@ class Device(object):
                     logit_new = copy.deepcopy(output.detach())
                     for i,yy in enumerate(y):
                         y_c = yy.item()
-                        if type(self.used_global_logits[y_c])!=type([]):
+                        if y_c in self.used_global_logits and type(self.used_global_logits[y_c])!=type([]):
                             logit_new[i,:] = self.global_logits[y_c].data
                     loss += self.loss_mse(logit_new,output) * self.lamda
         
