@@ -1,13 +1,20 @@
 import torch 
 import time
 import argparse
+import logging
 from runtime import run
 
 if __name__ =='__main__':
     total_start = time.time()
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Block_Fed_Simulation")
+    # TODO add logfile
+    torch.backends.cudnn.benchmark = True
+    _logger = logging.getLogger('train')
+    # config set
+    config_parser = parser = argparse.ArgumentParser(description='Training config',add_help=False)
+    parser.add_argument('-c','--config',default='',type=str,metavar='FILE',help='path to config file')
+    parser = argparse.ArgumentParser(description="pytorch Hdl-bfl")
 
-    # debug attributes
+    # basic attributes
     parser.add_argument('-g', '--gpu', type=str, default='0', help='GPU id to use(e.g. 0,1,2,3)')
     parser.add_argument('-v', '--verbose', type=int, default=1, help='print verbose debug log')
     parser.add_argument('-sn', '--save_network_snapshots', type=int, default=0, help='only save network_snapshots if this is set to 1; will create a folder with date in the snapshots folder')
