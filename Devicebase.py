@@ -215,7 +215,6 @@ class Device(object):
         for param, new_param in zip(model.parameters(), new_params):
             param.data = new_param.data.clone()
 
-    '''test part'''
     '''for global model'''
     def test_metrics(self):
         testloaderfull = self.load_test_data()
@@ -259,30 +258,6 @@ class Device(object):
         auc =0
         return test_acc, test_num, auc
 
-    # def train_metrics(self):
-    #     trainloader = self.load_train_data()
-    #     # self.model = self.load_model('model')
-    #     # self.model.to(self.device)
-    #     self.model.eval()
-
-    #     train_num = 0
-    #     losses = 0
-    #     with torch.no_grad():
-    #         for x, y in trainloader:
-    #             if type(x) == type([]):
-    #                 x[0] = x[0].to(self.device)
-    #             else:
-    #                 x = x.to(self.device)
-    #             y = y.to(self.device)
-    #             output = self.model(x)
-    #             loss = self.loss(output, y)
-    #             train_num += y.shape[0]
-    #             losses += loss.item() * y.shape[0]
-
-    #     # self.model.cpu()
-    #     # self.save_model(self.model, 'model')
-
-    #     return losses, train_num
     def train_metrics(self):
         trainloader = self.load_train_data()
         # self.model = self.load_model('model')
@@ -316,25 +291,6 @@ class Device(object):
         # self.save_model(self.model, 'model')
 
         return losses, train_num
-    # def get_next_train_batch(self):
-    #     try:
-    #         # Samples a new batch for persionalizing
-    #         (x, y) = next(self.iter_trainloader)
-    #     except StopIteration:
-    #         # restart the generator if the previous generator is exhausted.
-    #         self.iter_trainloader = iter(self.trainloader)
-    #         (x, y) = next(self.iter_trainloader)
-
-    #     if type(x) == type([]):
-    #         x = x[0]
-    #     x = x.to(self.device)
-    #     y = y.to(self.device)
-
-    #     return x, y
-
-    # @staticmethod
-    # def model_exists():
-    #     return os.path.exists(os.path.join("models", "server" + ".pt"))
 
     def set_devices_dict_and_aio(self,devices_dict,aio):
         self.devices_dict = devices_dict
@@ -1023,4 +979,3 @@ class Device(object):
         self.set_accuracy_this_round(test_acc)
         self.set_loss_this_round(train_loss)
         self.set_auc_this_round(test_auc)
-

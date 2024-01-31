@@ -5,7 +5,8 @@
             "name": "Python: Debug main.py",
             "type": "python",
             "request": "launch",
-            "program": "D:/Project/PosFL-DL/main.py", // 修改这一行
+            // "program": "D:/Project/PosFL-DL/main.py", // 修改这一行
+            "program":"D:/Project/HDL-BFL/CS_hdl/run.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
