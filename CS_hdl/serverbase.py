@@ -68,6 +68,8 @@ class Server(object):
 
     def client_load_model(self,model_list,i):
             modelname = model_list[i % len(np.unique(model_list))]
+            # log info 
+            print(f"Clinet {i} is using model:{modelname}\n")
             model = self.getter_model(modelname,self.num_classes,self.dataset)
             return model
 
