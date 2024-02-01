@@ -51,9 +51,9 @@ class Client(object):
         self.num_classes = args.num_classes
         self.train_samples = train_samples
         self.test_samples = test_samples
-        # self.batch_size = args.batch_size
+        self.batch_size = args.batch_size
         self.learning_rate = args.learning_rate
-        # self.local_epochs = args.local_epochs
+        self.local_epochs = args.local_epochs
 
         # check BatchNorm
         self.has_BatchNorm = False
@@ -107,7 +107,7 @@ class Client(object):
     def test_metrics(self):
         testloaderfull = self.load_test_data()
         # self.model = self.load_model('model')
-        # self.model.to(self.device)
+        self.model.to(self.device)
         self.model.eval()
 
         test_acc = 0

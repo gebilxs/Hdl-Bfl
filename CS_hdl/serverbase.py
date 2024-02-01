@@ -48,7 +48,10 @@ class Server(object):
         self.rs_test_acc = []
         self.rs_test_auc = []
         self.rs_train_loss = []
+        # 分割模型列表
         self.model_list = args.models.split(',')
+        self.eval_new_clients = False
+        self.num_new_clients = args.num_new_clients
     def set_clients(self, clientObj):
         for i in range(self.num_clients):
             train_data = read_client_data(self.dataset, i, is_train=True)
@@ -69,7 +72,7 @@ class Server(object):
             return model
 
     def getter_model(self,modelname,num_classes,dataname):
-
+        # 待封装都可以放到Model.py中
         if modelname == 'resnet':
             model = torchvision.models.resnet18()
             model.fc = nn.Sequential(OrderedDict([
@@ -89,7 +92,7 @@ class Server(object):
             if 'mnist' in dataname:
                 model.conv1[0] = nn.Conv2d(1, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
         elif modelname == 'googlenet':
-            model = torchvision.models.googlenet(init_weights=True)
+            model = torchvision.models.googlenet(init_weights=True,aux_logits=False)
             model.fc = nn.Sequential(OrderedDict([
                 ('fcin', nn.Linear(1024, 512)),
                 ('relu', nn.ReLU()),
@@ -99,7 +102,7 @@ class Server(object):
                 model.conv1.conv = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
         elif modelname == 'alexnet':
             if 'imagenet' in dataname:
-                model = torchvision.models.alexnet()
+                model = torchvision.models.alexnet(aux_logits=False)
                 model.classifier = nn.Sequential(nn.Dropout())
                 model.fc = nn.Sequential(OrderedDict([
                     ('fcin', nn.Linear(256 * 256 * 3, 512)),

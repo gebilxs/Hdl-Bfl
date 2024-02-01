@@ -20,7 +20,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=2022)
-    parser.add_argument('--dataset', type=str, default='emnist')
+    parser.add_argument('--dataset', type=str, default='fmnist')
     parser.add_argument('--models', type=str,
                         default='resnet,shufflenet,googlenet,alexnet')
     parser.add_argument('--num_clients', type=int, default=20)
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     parser.add_argument('--runfile', type=str, default='cifar10_KTpFL-rsga_noniid-labeldir_20clients_C1_E20')
     # KT-pFL training params
     parser.add_argument('--public_datasize', type=int, default=3000)
-    parser.add_argument('--local_epochs', type=int, default=20)
+    parser.add_argument('--local_epochs', type=int, default=5)
     parser.add_argument('--num_distill', type=int, default=1)
     parser.add_argument('--max_rounds', type=int, default=200)
     parser.add_argument('--num_classes',type=int,default=10)
@@ -52,6 +52,7 @@ if __name__ == "__main__":
                         choices=["cpu", "cuda"])
     parser.add_argument('-ldg', "--learning_rate_decay_gamma", type=float, default=0.99)
     parser.add_argument('-ld', "--learning_rate_decay", type=bool, default=False)
-
+    parser.add_argument('-lbs', "--batch_size", type=int, default=10)
+    parser.add_argument('-nnc', "--num_new_clients", type=int, default=0)
     args = parser.parse_args()
     main(args)
