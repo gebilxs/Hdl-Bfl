@@ -1,0 +1,1 @@
+nohup python -u CS_hdl/run.py --dataset fmnist > fmnist_feddistill.out 2>&1 &
