@@ -29,7 +29,7 @@ random.seed(1)
 np.random.seed(1)
 num_clients = 20
 num_classes = 10
-dir_path = "dataset/fmnist-0.1/"
+dir_path = "dataset/fmnist/"
 
 
 # Allocate data to users
@@ -47,7 +47,11 @@ def generate_fmnist(dir_path, num_clients, num_classes, niid, balance, partition
 
     # Get FashionMNIST data
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
-
+#     transform = transforms.Compose([
+#     transforms.Grayscale(num_output_channels=3),  # 将1个通道转换为3个通道
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+# ])
     trainset = torchvision.datasets.FashionMNIST(
         root=dir_path+"rawdata", train=True, download=True, transform=transform)
     testset = torchvision.datasets.FashionMNIST(

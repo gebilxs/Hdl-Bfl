@@ -22,6 +22,8 @@ import h5py
 import copy
 import time
 import random
+import sys
+
 from utils.data_utils import read_client_data,read_public_data
 import torchvision
 import torchvision.transforms as transforms
@@ -52,17 +54,20 @@ class Server(object):
         self.model_list = args.models.split(',')
         self.eval_new_clients = False
         self.num_new_clients = args.num_new_clients
+        self.public_dataset = args.public_dataset
     def set_clients(self, clientObj):
         for i in range(self.num_clients):
             train_data = read_client_data(self.dataset, i, is_train=True)
             test_data = read_client_data(self.dataset, i, is_train=False)
             # public_data = read_public_data(self.dataset,is_train=True)
             model_r = self.client_load_model(self.model_list,i)
+            public_data = read_public_data(self.public_dataset,is_train=True)
             client = clientObj(self.args, 
                             id=i, 
                             train_samples=len(train_data), 
                             test_samples=len(test_data), 
-                            model_c = model_r,
+                            pubilc_samples = len(public_data),
+                            model_c = model_r
             )
             self.clients.append(client)
 

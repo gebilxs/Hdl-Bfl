@@ -31,14 +31,15 @@ if __name__ == "__main__":
     parser.add_argument('--runfile', type=str, default='cifar10_KTpFL-rsga_noniid-labeldir_20clients_C1_E20')
     # KT-pFL training params
     parser.add_argument('--public_datasize', type=int, default=3000)
-    parser.add_argument('--local_epochs', type=int, default=5)
+    parser.add_argument('--public_dataset', type=str, default='mnist')
+    parser.add_argument('--local_epochs', type=int, default=1)
     parser.add_argument('--num_distill', type=int, default=1)
     parser.add_argument('--max_rounds', type=int, default=200)
     parser.add_argument('--num_classes',type=int,default=10)
-    parser.add_argument('--learning_rate', type=float, default=0.01)
+    parser.add_argument('--learning_rate', type=float, default=0.005)
     # parser.add_argument('--distill_lr', type=float, default=0.01, help='mu3 to update c')
     parser.add_argument('--output_path', type=str, default='results/debug')
-    parser.add_argument('-lam', "--lamda", type=float, default=1.0,
+    parser.add_argument('-lam', "--lamda", type=float, default=1,
                         help="Regularization weight")
     parser.add_argument('-rjr', "--random_join_ratio", type=bool, default=False,
                         help="Random ratio of clients per round")

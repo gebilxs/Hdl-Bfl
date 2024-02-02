@@ -33,15 +33,26 @@ parent_dir = os.path.dirname(current_dir)
 # 将上一级目录添加到 sys.path
 sys.path.append(parent_dir)
 
-from utils.data_utils import read_client_data
-
+from utils.data_utils import read_client_data,read_public_data
+import random
+import numpy as np
+import os
+SEED = 2021
+random.seed(SEED)
+np.random.seed(SEED)
+os.environ['PYTHONHASHSEED'] = str(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = True
 
 class Client(object):
     """
     Base class for clients in federated learning.
     """
 
-    def __init__(self, args, id, train_samples, test_samples, model_c,**kwargs):
+    def __init__(self, args, id, train_samples, test_samples, public_samples,model_c,**kwargs):
         self.model = copy.deepcopy(model_c)
         self.dataset = args.dataset
         self.device = args.device
@@ -51,6 +62,7 @@ class Client(object):
         self.num_classes = args.num_classes
         self.train_samples = train_samples
         self.test_samples = test_samples
+        self.public_samples = public_samples
         self.batch_size = args.batch_size
         self.learning_rate = args.learning_rate
         self.local_epochs = args.local_epochs
@@ -77,7 +89,7 @@ class Client(object):
             gamma=args.learning_rate_decay_gamma
         )
         self.learning_rate_decay = args.learning_rate_decay
-
+        self.public_dataset =args.public_dataset
 
     def load_train_data(self, batch_size=None):
         if batch_size == None:
@@ -90,7 +102,13 @@ class Client(object):
             batch_size = self.batch_size
         test_data = read_client_data(self.dataset, self.id, is_train=False)
         return DataLoader(test_data, batch_size, drop_last=False, shuffle=True)
-        
+    
+    def load_public_data(self,batch_size=None):
+        if batch_size == None:
+            batch_size = self.batch_size
+        public_data = read_public_data(self.public_dataset, is_train=True)
+        return DataLoader(public_data, batch_size, drop_last=False, shuffle=True)
+    
     def set_parameters(self, model):
         for new_param, old_param in zip(model.parameters(), self.model.parameters()):
             old_param.data = new_param.data.clone()

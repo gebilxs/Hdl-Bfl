@@ -15,8 +15,12 @@ def generate_mnist(dir_path, datasize, classes=np.arange(10)):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
+#     transform = transforms.Compose([
+#     transforms.Grayscale(num_output_channels=3),  # 将1个通道转换为3个通道
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+# ])
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
-    
     # 加载 MNIST 数据
     full_dataset = torchvision.datasets.MNIST(root=dir_path, train=True, transform=transform, download=True)
     
