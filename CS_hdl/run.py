@@ -31,7 +31,7 @@ if __name__ == "__main__":
     parser.add_argument('--runfile', type=str, default='cifar10_KTpFL-rsga_noniid-labeldir_20clients_C1_E20')
     # KT-pFL training params
     parser.add_argument('--public_datasize', type=int, default=3000)
-    parser.add_argument('--public_dataset', type=str, default='mnist')
+    parser.add_argument('--public_dataset', type=str, default='cifar100')
     parser.add_argument('--local_epochs', type=int, default=1)
     parser.add_argument('--num_distill', type=int, default=1)
     parser.add_argument('--max_rounds', type=int, default=200)

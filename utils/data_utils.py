@@ -46,13 +46,21 @@ def read_public_data(public_dataset,is_train=True):
     if is_train:
         public_data_dir = os.path.join('dataset',public_dataset+'_public')
         public_file = public_data_dir + '/0.npz'
-        with np.load(public_file,allow_pickle=True) as public_dataset:
-            X_public = torch.Tensor(public_dataset['x']).type(torch.float32)
-            X_public = X_public.unsqueeze(1)  # 添加一个通道维度
-            # print(X_public.shape)
-            y_public = torch.Tensor(public_dataset['y']).type(torch.long)
+        if public_dataset == 'mnist':
+            with np.load(public_file,allow_pickle=True) as public_dataset:
+                X_public = torch.Tensor(public_dataset['x']).type(torch.float32)
+                X_public = X_public.unsqueeze(1)  # 添加一个通道维度
+                # print(X_public.shape)
+                y_public = torch.Tensor(public_dataset['y']).type(torch.long)
+        else:
+            with np.load(public_file,allow_pickle=True) as public_dataset:
+                X_public = torch.Tensor(public_dataset['x']).type(torch.float32)
+                X_public = X_public.permute(0, 3, 1, 2)
+                # print(X_public.shape)
+                y_public = torch.Tensor(public_dataset['y']).type(torch.long)
 
             public_data = [(x,y) for x,y in zip(X_public,y_public)]
+        
 
     return public_data    
 def read_client_data(dataset, idx, is_train=True):

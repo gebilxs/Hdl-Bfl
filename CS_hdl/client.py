@@ -56,7 +56,7 @@ class clientHdl(Client):
                 #     loss += self.loss_mse(logit_new, output) * self.lamda
             # 知识蒸馏损失
                 if self.global_logits is not None:
-                    temperature = 10.0  # 温度参数，可调整
+                    temperature = 1.0  # 温度参数，可调整
                     for i, yy in enumerate(y):
                         y_c = yy.item()
                         if not isinstance(self.global_logits[y_c], list):
@@ -80,8 +80,8 @@ class clientHdl(Client):
         with torch.no_grad():
             logits = defaultdict(list)
             for x, _ in publicloadere:
-                if x.shape[1] == 3:  # 假设x的形状为[N, C, H, W]
-                    x = x.mean(dim=1, keepdim=True)
+                # if x.shape[1] == 3:  # 假设x的形状为[N, C, H, W]
+                #     x = x.mean(dim=1, keepdim=True)
                 x = x.to(self.device)
                 output = self.model(x)
                 for i in range(output.shape[0]):
