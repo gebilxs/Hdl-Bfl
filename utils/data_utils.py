@@ -59,7 +59,7 @@ def read_public_data(public_dataset,is_train=True):
                 # print(X_public.shape)
                 y_public = torch.Tensor(public_dataset['y']).type(torch.long)
 
-            public_data = [(x,y) for x,y in zip(X_public,y_public)]
+        public_data = [(x,y) for x,y in zip(X_public,y_public)]
         
 
     return public_data    

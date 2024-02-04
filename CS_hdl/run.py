@@ -10,15 +10,20 @@ import wandb
 from tqdm import tqdm
 
 from server import Hdl
+from serverbaseline import Hbase
 
 
 def main(args):
     print("main start")
-    server = Hdl(args,args.times)
+    if args.algorithm == 'hdl':
+        server = Hdl(args,args.times)
+    else:
+        server = Hbase(args,args.times)
     server.train()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--algorithm', type=str, default='hdl')
     parser.add_argument('--seed', type=int, default=2022)
     parser.add_argument('--dataset', type=str, default='fmnist')
     parser.add_argument('--models', type=str,

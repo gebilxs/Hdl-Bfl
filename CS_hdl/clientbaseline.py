@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import random
 import numpy as np
 import os
-SEED = 2024
+SEED = 2021
 random.seed(SEED)
 np.random.seed(SEED)
 os.environ['PYTHONHASHSEED'] = str(SEED)
@@ -18,7 +18,7 @@ torch.cuda.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = True
-class clientHdl(Client):
+class clientHbase(Client):
     def __init__(self, args, id, train_samples, test_samples,pubilc_samples,**kwargs):
         super().__init__(args, id, train_samples, test_samples,pubilc_samples,**kwargs)
 
