@@ -470,11 +470,19 @@ class clientHdl(Client):
         # print(model_n)
         # 需要根据model_n的具体输出维度来定制projector，这里只是一个示例
         feature_dim = self._get_feature_dim(model_n,modelname,stage)
+        intermediate_dim = feature_dim // 2  # 示例：中间层维度设置为输出维度的一半
+
         projector = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),
-            nn.Linear(feature_dim, self.num_classes)
-        )
+            nn.Linear(feature_dim, intermediate_dim),
+            nn.BatchNorm1d(intermediate_dim),  # 添加Batch Normalization层
+            nn.ReLU(),  # 使用ReLU激活函数
+            nn.Dropout(0.5),  # 添加Dropout，丢弃率设置为0.5
+            nn.Linear(intermediate_dim, intermediate_dim // 2),  # 可以继续添加更多层
+            nn.ReLU(),  # 再次使用ReLU激活函数
+            nn.Linear(intermediate_dim // 2, self.num_classes)  # 最终输出层
+    )
         return projector
 # https://github.com/yuetan031/fedlogit/blob/main/lib/utils.py#L205
 def agg_func(logits):
