@@ -60,14 +60,16 @@ class Server(object):
             train_data = read_client_data(self.dataset, i, is_train=True)
             test_data = read_client_data(self.dataset, i, is_train=False)
             # public_data = read_public_data(self.dataset,is_train=True)
-            model_r = self.client_load_model(self.model_list,i)
+            model_r,modelname = self.client_load_model(self.model_list,i)
+
             public_data = read_public_data(self.public_dataset,is_train=True)
             client = clientObj(self.args, 
                             id=i, 
                             train_samples=len(train_data), 
                             test_samples=len(test_data), 
                             pubilc_samples = len(public_data),
-                            model_c = model_r
+                            model_c = model_r,
+                            modelname = modelname,
             )
             self.clients.append(client)
 
@@ -76,7 +78,8 @@ class Server(object):
             # log info 
             print(f"Clinet {i} is using model:{modelname}\n")
             model = self.getter_model(modelname,self.num_classes,self.dataset)
-            return model
+            # print(model)
+            return model,modelname
 
     def getter_model(self,modelname,num_classes,dataname):
         # 待封装都可以放到Model.py中

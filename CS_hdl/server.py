@@ -46,6 +46,7 @@ class Hdl(Server):
 # https://github.com/yuetan031/fedlogit/blob/main/lib/utils.py#L221
 def logit_aggregation(local_logits_list):
     agg_logits_label = defaultdict(list)
+    # agg_logits_label = []
     for local_logits in local_logits_list:
         for label in local_logits.keys():
             agg_logits_label[label].append(local_logits[label])
@@ -60,3 +61,30 @@ def logit_aggregation(local_logits_list):
             agg_logits_label[label] = logit_list[0].data
 
     return agg_logits_label
+            
+
+# def logit_aggregation(local_logits_list):
+#     # Assuming each local_logits entry has the same labels, 
+#     # and each label's tensor is of the same size across entries.
+#     # First, collect all logits for each label across all local models.
+#     agg_logits_label = defaultdict(list)
+#     for local_logits in local_logits_list:
+#         for label, logit in local_logits.items():
+#             agg_logits_label[label].append(logit)
+    
+#     # Now, average the collected logits for each label.
+#     # Initialize a placeholder for the aggregated logits.
+#     aggregated_logits = {}
+#     for label, logit_list in agg_logits_label.items():
+#         # Stack all logits for the current label into a new dimension and then average across this dimension.
+#         stacked_logits = torch.stack(logit_list, dim=0)
+#         average_logits = torch.mean(stacked_logits, dim=0)
+#         aggregated_logits[label] = average_logits
+    
+#     # Convert aggregated_logits to a single tensor if required.
+#     # Note: The following step assumes you want to concatenate all label logits into a single tensor.
+#     # This step might need adjustment based on how you intend to use the aggregated logits.
+#     labels_sorted = sorted(aggregated_logits.keys())  # Ensure consistent order
+#     final_aggregated_tensor = torch.cat([aggregated_logits[label] for label in labels_sorted], dim=0)
+
+#     return final_aggregated_tensor

@@ -52,7 +52,7 @@ class Client(object):
     Base class for clients in federated learning.
     """
 
-    def __init__(self, args, id, train_samples, test_samples, public_samples,model_c,**kwargs):
+    def __init__(self, args, id, train_samples, test_samples, public_samples,model_c,modelname,**kwargs):
         self.model = copy.deepcopy(model_c)
         self.dataset = args.dataset
         self.device = args.device
@@ -66,7 +66,7 @@ class Client(object):
         self.batch_size = args.batch_size
         self.learning_rate = args.learning_rate
         self.local_epochs = args.local_epochs
-
+        self.modelname = modelname
         # check BatchNorm
         self.has_BatchNorm = False
         for layer in self.model.children():
@@ -221,3 +221,4 @@ class Client(object):
     # @staticmethod
     # def model_exists():
     #     return os.path.exists(os.path.join("models", "server" + ".pt"))
+    
