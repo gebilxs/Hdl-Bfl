@@ -60,9 +60,9 @@ if __name__ == "__main__":
     parser.add_argument('-lbs', "--batch_size", type=int, default=10)
     parser.add_argument('-nnc', "--num_new_clients", type=int, default=0)
     # OFA parameters
-    parser.add_argument('--ofa-eps', default=[1,1.4,1.8,3], nargs='+', type=float)
+    parser.add_argument('--ofa-eps', default=[1,1.4,1.4,3], nargs='+', type=float)
     parser.add_argument('--ofa-stage', default=[1, 2, 3, 4], nargs='+', type=int)
-    parser.add_argument('--ofa-loss-weight', default=3, type=float)
+    parser.add_argument('--ofa-loss-weight', default=1, type=float)
     parser.add_argument('--ofa-temperature', default=5, type=float)
     parser.add_argument('--loss_kd_weight', default=1, type=float)
     parser.add_argument('--loss_gt_weight', default=1, type=float)

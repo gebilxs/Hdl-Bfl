@@ -118,8 +118,8 @@ class clientHdl(Client):
                         if not isinstance(self.global_logits[y_c], list):
                             teacher_logits1 = self.global_logits[y_c].to(self.device)
                             # 将输出和教师logits都除以温度
-                            soft_target = F.softmax(teacher_logits1 / temperature, dim=0)
-                            soft_output = F.softmax(output[i, :] / temperature, dim=0)
+                            soft_target = F.softmax(teacher_logits1 / temperature, dim=-1)
+                            soft_output = F.softmax(output[i, :] / temperature, dim=-1)
                             # 使用KL散度作为蒸馏损失
                             loss_kd1.append(F.kl_div(soft_output.log(), soft_target, reduction='batchmean'))
                     loss_kd = sum(loss_kd1) * self.kd_loss_weight
@@ -253,7 +253,9 @@ class clientHdl(Client):
                 total_loss_ofa += loss_ofa.item() * y.size(0)
                 total_loss_kd += loss_kd.item() * y.size(0)
                 loss = total_loss_gt + total_loss_ofa + total_loss_kd
-
+                print(f"Ground Truth Loss (loss_gt): {loss_gt.item()}")
+                print(f"OFA Loss (loss_ofa): {loss_ofa.item()}")
+                print(f"Knowledge Distillation Loss (loss_kd): {loss_kd.item()}")
         average_loss_gt = total_loss_gt / train_num
         average_loss_ofa = total_loss_ofa / train_num
         average_loss_kd = total_loss_kd / train_num
@@ -479,7 +481,7 @@ class clientHdl(Client):
             nn.BatchNorm1d(intermediate_dim),  # 添加Batch Normalization层
             nn.ReLU(),  # 使用ReLU激活函数
             nn.Dropout(0.5),  # 添加Dropout，丢弃率设置为0.5
-            nn.Linear(intermediate_dim, intermediate_dim // 2),  # 可以继续添加更多层
+            nn.Linear(intermediate_dim, intermediate_dim // 2),  
             nn.ReLU(),  # 再次使用ReLU激活函数
             nn.Linear(intermediate_dim // 2, self.num_classes)  # 最终输出层
     )
