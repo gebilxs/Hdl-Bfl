@@ -253,13 +253,16 @@ class clientHdl(Client):
                 total_loss_ofa += loss_ofa.item() * y.size(0)
                 total_loss_kd += loss_kd.item() * y.size(0)
                 loss = total_loss_gt + total_loss_ofa + total_loss_kd
-                print(f"Ground Truth Loss (loss_gt): {loss_gt.item()}")
-                print(f"OFA Loss (loss_ofa): {loss_ofa.item()}")
-                print(f"Knowledge Distillation Loss (loss_kd): {loss_kd.item()}")
+
         average_loss_gt = total_loss_gt / train_num
         average_loss_ofa = total_loss_ofa / train_num
         average_loss_kd = total_loss_kd / train_num
+        print(f"Ground Truth Loss (loss_gt): {average_loss_gt.item()}")
+        print(f"OFA Loss (loss_ofa): {average_loss_ofa.item()}")
+        print(f"Knowledge Distillation Loss (loss_kd): {average_loss_kd.item()}")
+        
         total_average_loss = (average_loss_gt + average_loss_ofa + average_loss_kd)
+
 
         return loss, train_num
 
