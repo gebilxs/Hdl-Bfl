@@ -257,10 +257,11 @@ class clientHdl(Client):
         average_loss_gt = total_loss_gt / train_num
         average_loss_ofa = total_loss_ofa / train_num
         average_loss_kd = total_loss_kd / train_num
-        print(f"Ground Truth Loss (loss_gt): {average_loss_gt.item()}")
-        print(f"OFA Loss (loss_ofa): {average_loss_ofa.item()}")
-        print(f"Knowledge Distillation Loss (loss_kd): {average_loss_kd.item()}")
-        
+        print(f"client{self.id}")
+        print(f"Ground Truth Loss (loss_gt): {average_loss_gt}")
+        print(f"OFA Loss (loss_ofa): {average_loss_ofa}")
+        print(f"Knowledge Distillation Loss (loss_kd): {average_loss_kd}")
+
         total_average_loss = (average_loss_gt + average_loss_ofa + average_loss_kd)
 
 
