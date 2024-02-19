@@ -76,7 +76,7 @@ class clientHdl(Client):
                 total_loss_gt += loss_gt * self.gt_loss_weight
                 loss_gt.backward()
                 self.optimizer.step()
-            
+
             if self.global_logits != None:
                 # print(self.global_logits)
                 for i,(xp,yp) in enumerate(publicloadere):
@@ -103,22 +103,23 @@ class clientHdl(Client):
                     total_loss_ofa += loss_ofa
                         # teacher_logits1 = torch.stack([self.global_logits[yi.item()] for yi in y])
                         # loss_kd =  F.kl_div(F.log_softmax(output, dim=1), F.softmax(teacher_logits1, dim=1), reduction='batchmean') * self.kd_loss_weight
-                    loss_kd1 = []
-                    output = self.model(xp)
-                    for i, yy in enumerate(yp):
-                        y_c = yy.item()
-                        temperature = self.temperature
-                        if not isinstance(self.global_logits[y_c], list):
-                            teacher_logits1 = self.global_logits[y_c].to(self.device)
-                            # 将输出和教师logits都除以温度
-                            soft_target = F.softmax(teacher_logits1 / temperature , dim=-1)
-                            # soft_output = F.softmax(output[i, :] / temperature, dim=-1)
-                            log_soft_output = F.log_softmax(output[i, :] / temperature, dim=-1)
-                            # 使用KL散度作为蒸馏损失
-                            loss_kd1.append(F.kl_div(log_soft_output, soft_target, reduction='batchmean'))
-                    loss_kd = sum(loss_kd1) * self.kd_loss_weight
+                    # loss_kd1 = []
+                    # output = self.model(xp)
+                    # for i, yy in enumerate(yp):
+                    #     y_c = yy.item()
+                    #     temperature = self.temperature
+                    #     if not isinstance(self.global_logits[y_c], list):
+                    #         teacher_logits1 = self.global_logits[y_c].to(self.device)
+                    #         # 将输出和教师logits都除以温度
+                    #         soft_target = F.softmax(teacher_logits1 / temperature , dim=-1)
+                    #         # soft_output = F.softmax(output[i, :] / temperature, dim=-1)
+                    #         log_soft_output = F.log_softmax(output[i, :] / temperature, dim=-1)
+                    #         # 使用KL散度作为蒸馏损失
+                    #         loss_kd1.append(F.kl_div(log_soft_output, soft_target, reduction='batchmean'))
+                    # loss_kd = sum(loss_kd1) * self.kd_loss_weight
+
                     total_loss_kd += loss_kd
-                    (loss_ofa + loss_kd).backward()
+                    (loss_ofa).backward()
                     self.optimizer.step()
                     
             # loss = total_loss_kd +total_loss_ofa + total_loss_gt
@@ -195,40 +196,40 @@ class clientHdl(Client):
                         ofa_losses.append(self.ofa_loss(logits_student, teacher_logits, target_mask, eps, self.ofa_temperature))
                     loss_ofa = sum(ofa_losses) * self.ofa_loss_weight
                 # LOSS KD
-                    loss_kd1 = []
-                    output = self.model(xp)
-                    for i, yy in enumerate(yp):
-                        y_c = yy.item()
-                        temperature = self.temperature
-                        if not isinstance(self.global_logits[y_c], list):
-                            teacher_logits1 = self.global_logits[y_c].to(self.device)
-                            # 将输出和教师logits都除以温度
-                            soft_target = F.softmax(teacher_logits1 / temperature, dim=-1)
-                            log_soft_output = F.log_softmax(output[i, :] / temperature, dim=-1)
-                            # soft_output = F.softmax(output[i, :] / temperature, dim=0)
-                            # 使用KL散度作为蒸馏损失
-                            loss_kd1.append(F.kl_div(log_soft_output, soft_target, reduction='batchmean'))
-                    loss_kd = sum(loss_kd1) * self.kd_loss_weight
+                    # loss_kd1 = []
+                    # output = self.model(xp)
+                    # for i, yy in enumerate(yp):
+                    #     y_c = yy.item()
+                    #     temperature = self.temperature
+                    #     if not isinstance(self.global_logits[y_c], list):
+                    #         teacher_logits1 = self.global_logits[y_c].to(self.device)
+                    #         # 将输出和教师logits都除以温度
+                    #         soft_target = F.softmax(teacher_logits1 / temperature, dim=-1)
+                    #         log_soft_output = F.log_softmax(output[i, :] / temperature, dim=-1)
+                    #         # soft_output = F.softmax(output[i, :] / temperature, dim=0)
+                    #         # 使用KL散度作为蒸馏损失
+                    #         loss_kd1.append(F.kl_div(log_soft_output, soft_target, reduction='batchmean'))
+                    # loss_kd = sum(loss_kd1) * self.kd_loss_weight
                     
                     train_public_num += yp.size(0)
                     total_loss_ofa += loss_ofa.item() * yp.size(0)
-                    total_loss_kd += loss_kd.item() * yp.size(0)
+                    # total_loss_kd += loss_kd.item() * yp.size(0)
                 
                 
 
 
         average_loss_gt = total_loss_gt / train_num if train_num > 0 else 0
         average_loss_ofa = total_loss_ofa / train_public_num if train_public_num > 0 else 0
-        average_loss_kd = total_loss_kd / train_public_num if train_public_num > 0 else 0
+        # average_loss_kd = total_loss_kd / train_public_num if train_public_num > 0 else 0
 
         print(f"client{self.id}")
         print(f"Ground Truth Loss (loss_gt): {average_loss_gt}")
         print(f"OFA Loss (loss_ofa): {average_loss_ofa}")
-        print(f"Knowledge Distillation Loss (loss_kd): {average_loss_kd}")
+        # print(f"Knowledge Distillation Loss (loss_kd): {average_loss_kd}")
 
-        total_average_loss = (average_loss_gt + average_loss_ofa + average_loss_kd) * train_num
+        # total_average_loss = (average_loss_gt + average_loss_ofa + average_loss_kd) * train_num
 
-
+        total_average_loss = (average_loss_gt + average_loss_ofa) * train_num
         return total_average_loss, train_num
 
 
