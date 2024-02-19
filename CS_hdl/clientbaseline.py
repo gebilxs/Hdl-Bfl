@@ -26,7 +26,7 @@ class clientHbase(Client):
         self.global_logits = None
         self.loss_mse = nn.MSELoss()
         self.lamda = args.lamda
-
+        self.temperature = args.temperature
     def train(self):
         trainloadere = self.load_train_data()
         publicloadere = self.load_public_data()
@@ -36,8 +36,10 @@ class clientHbase(Client):
 
         max_local_epochs = self.local_epochs
         logits = defaultdict(list)
+        loss =0
         for epoch in range(max_local_epochs):
             for i,(x,y) in enumerate(trainloadere):
+                self.optimizer.zero_grad()
                 if type(x) == type([]):
                     x[0] = x[0].to(self.device)
                 else:
@@ -45,33 +47,27 @@ class clientHbase(Client):
                 y = y.to(self.device)
                 output = self.model(x)
 
-                loss = self.loss(output,y)
+                loss += self.loss(output,y)
 
-                # if self.global_logits!=None:
-                #     logit_new = copy.deepcopy(output.detach())
-                #     for i, yy in enumerate(y):
-                #         y_c = yy.item()
-                #         if type(self.global_logits[y_c]) != type([]):
-                #             logit_new[i, :] = self.global_logits[y_c].data
-                #     loss += self.loss_mse(logit_new, output) * self.lamda
-            # 知识蒸馏损失
-                if self.global_logits is not None:
-                    temperature = 1.0  # 温度参数，可调整
-                    for i, yy in enumerate(y):
+            if self.global_logits is not None:
+                for i,(xp,yp) in enumerate(publicloadere): 
+                    self.optimizer.zero_grad()
+                    temperature = 5.0  # 温度参数，可调整
+                    for i, yy in enumerate(yp):
                         y_c = yy.item()
                         if not isinstance(self.global_logits[y_c], list):
                             teacher_logits = self.global_logits[y_c].to(self.device)
-                            # 将输出和教师logits都除以温度
+                                # 将输出和教师logits都除以温度
                             soft_target = F.softmax(teacher_logits / temperature, dim=0)
                             soft_output = F.softmax(output[i, :] / temperature, dim=0)
-                            # 使用KL散度作为蒸馏损失
+                                # 使用KL散度作为蒸馏损失
                             distillation_loss = F.kl_div(soft_output.log(), soft_target, reduction='batchmean')
-                            # 综合两部分损失
+                                # 综合两部分损失
                             loss += distillation_loss * self.lamda
 
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+                
+            loss.backward()
+            self.optimizer.step()
             
         if self.learning_rate_decay:
             self.learning_rate_scheduler.step()
@@ -94,12 +90,14 @@ class clientHbase(Client):
 
     def train_metrics(self):
         trainloader = self.load_train_data()
+        publicloadere = self.load_public_data()
         # self.model = self.load_model('model')
         self.model.to(self.device)
         self.model.eval()
 
         train_num = 0
         losses = 0
+        loss =0
         with torch.no_grad():
             for x, y in trainloader:
                 if type(x) == type([]):
@@ -108,28 +106,42 @@ class clientHbase(Client):
                     x = x.to(self.device)
                 y = y.to(self.device)
                 output = self.model(x)
-                loss = self.loss(output, y)
-
-                if self.global_logits is not None:
-                    temperature = 10.0  # 温度参数，可调整
-                    for i, yy in enumerate(y):
+                loss += self.loss(output, y)
+            if self.global_logits != None:
+                # print(self.global_logits)
+                for i,(xp,yp) in enumerate(publicloadere):
+                    xp = xp.to(self.device)
+                    yp = yp.to(self.device)
+                    output = self.model(xp)
+                    for i, yy in enumerate(yp):
                         y_c = yy.item()
+                        temperature = self.temperature
                         if not isinstance(self.global_logits[y_c], list):
-                            teacher_logits = self.global_logits[y_c].to(self.device)
+                            teacher_logits1 = self.global_logits[y_c].to(self.device)
                             # 将输出和教师logits都除以温度
-                            soft_target = F.softmax(teacher_logits / temperature, dim=0)
-                            soft_output = F.softmax(output[i, :] / temperature, dim=0)
+                            soft_target = F.softmax(teacher_logits1 / temperature , dim=0)
+                            # soft_output = F.softmax(output[i, :] / temperature, dim=-1)
+                            log_soft_output = F.log_softmax(output[i, :] / temperature, dim=0)
                             # 使用KL散度作为蒸馏损失
-                            distillation_loss = F.kl_div(soft_output.log(), soft_target, reduction='batchmean')
-                            # 综合两部分损失
+                            distillation_loss=(F.kl_div(log_soft_output, soft_target, reduction='batchmean'))
                             loss += distillation_loss * self.lamda
+                # if self.global_logits is not None:
+                #     temperature = 10.0  # 温度参数，可调整
+                #     for i, yy in enumerate(y):
+                #         y_c = yy.item()
+                #         if not isinstance(self.global_logits[y_c], list):
+                #             teacher_logits = self.global_logits[y_c].to(self.device)
+                #             # 将输出和教师logits都除以温度
+                #             soft_target = F.softmax(teacher_logits / temperature, dim=0)
+                #             soft_output = F.softmax(output[i, :] / temperature, dim=0)
+                #             # 使用KL散度作为蒸馏损失
+                #             distillation_loss = F.kl_div(soft_output.log(), soft_target, reduction='batchmean')
+                #             # 综合两部分损失
+                #             loss += distillation_loss * self.lamda
                     
-                train_num += y.shape[0]
-                losses += loss.item() * y.shape[0]
-
-        # self.model.cpu()
-        # self.save_model(self.model, 'model')
-
+                train_num += yp.shape[0]
+                losses += loss.item() * yp.shape[0]
+                
         return losses, train_num
 # https://github.com/yuetan031/fedlogit/blob/main/lib/utils.py#L205
 def agg_func(logits):

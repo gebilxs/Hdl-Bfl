@@ -42,7 +42,7 @@ class Hdl(Server):
         for client in self.selected_clients:
             self.uploaded_ids.append(client.id)
             self.uploaded_logits.append(client.logits)
-        
+        # print(self.uploaded_logits)
 # https://github.com/yuetan031/fedlogit/blob/main/lib/utils.py#L221
 def logit_aggregation(local_logits_list):
     agg_logits_label = defaultdict(list)
