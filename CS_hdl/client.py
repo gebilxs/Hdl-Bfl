@@ -41,8 +41,8 @@ class clientHdl(Client):
                     for i in range(1, 5)  # 假设有4个阶段
                 })
         self.projectors.apply(self.init_weights)
-
-
+        self.learning_rate_decay_gamma = args.learning_rate_decay_gamma
+        self.clip_grad = args.clip_grad
     def train(self):
         trainloadere = self.load_train_data()
         publicloadere = self.load_public_data()
@@ -69,88 +69,56 @@ class clientHdl(Client):
                 else:
                     x = x.to(self.device)
                 y = y.to(self.device)
-                
                 output = self.model(x)
-
                 loss_gt = self.loss(output,y) # 计算交叉熵损失 loss_gt
                 total_loss_gt += loss_gt * self.gt_loss_weight
-                loss_gt.backward()
-                self.optimizer.step()
 
-            if self.global_logits != None:
-                # print(self.global_logits)
-                for i,(xp,yp) in enumerate(publicloadere):
-                    self.optimizer.zero_grad()
-                    if type(xp) == type([]):
-                        xp[0] = xp[0].to(self.device)
+
+                if self.global_logits != None:
+                    if len(y.shape) != 1:
+                        target_mask = F.one_hot(y.argmax(-1).long(), self.num_classes)
                     else:
-                        xp = xp.to(self.device)
-                    yp = yp.to(self.device)
-                    ofa_losses = []
-                    if len(yp.shape) != 1:
-                        target_mask = F.one_hot(yp.argmax(-1),self.num_classes)
-                    else:
-                        target_mask = F.one_hot(yp, self.num_classes)
-                        
+                        target_mask = F.one_hot(y.long(), self.num_classes)
+
+                    ofa_losses_recent = []
                     for stage, eps in zip(self.stage_count, self.eps):
-                        model_n = self.stage_info(self.modelname, stage).to(self.device)
-                        feat = model_n(xp) # 获取特征
-                        logits_student = self.projectors[str(stage)].to(self.device)(feat) # 获取学生模型输出
-                        teacher_logits = torch.stack([self.global_logits[yi.item()] for yi in yp])
-                        ofa_losses.append(self.ofa_loss(logits_student,teacher_logits,target_mask,eps,self.ofa_temperature))
+                            model_n = self.stage_info(self.modelname, stage).to(self.device)
+                            feat = model_n(x) # 获取特征
+                            logits_student = self.projectors[str(stage)].to(self.device)(feat) # 获取学生模型输出
+
+                            teacher_logits = torch.stack([self.global_logits[yi.item()] for yi in y])
+                            ofa_losses_recent.append(self.ofa_loss(logits_student,teacher_logits,target_mask,eps,self.ofa_temperature))
+
+                    logit_new = copy.deepcopy(output.detach())
+                    for i, yy in enumerate(y):
+                        y_c = yy.item()
+                        logit_new[i,:] = self.global_logits[y_c].data.to(self.device)
                         
-                    loss_ofa = sum(ofa_losses) * self.ofa_loss_weight
-                    total_loss_ofa += loss_ofa
-                        # teacher_logits1 = torch.stack([self.global_logits[yi.item()] for yi in y])
-                        # loss_kd =  F.kl_div(F.log_softmax(output, dim=1), F.softmax(teacher_logits1, dim=1), reduction='batchmean') * self.kd_loss_weight
-                    # loss_kd1 = []
-                    # output = self.model(xp)
-                    # for i, yy in enumerate(yp):
-                    #     y_c = yy.item()
-                    #     temperature = self.temperature
-                    #     if not isinstance(self.global_logits[y_c], list):
-                    #         teacher_logits1 = self.global_logits[y_c].to(self.device)
-                    #         # 将输出和教师logits都除以温度
-                    #         soft_target = F.softmax(teacher_logits1 / temperature , dim=-1)
-                    #         # soft_output = F.softmax(output[i, :] / temperature, dim=-1)
-                    #         log_soft_output = F.log_softmax(output[i, :] / temperature, dim=-1)
-                    #         # 使用KL散度作为蒸馏损失
-                    #         loss_kd1.append(F.kl_div(log_soft_output, soft_target, reduction='batchmean'))
-                    # loss_kd = sum(loss_kd1) * self.kd_loss_weight
-
+                    loss_kd = self.loss_mse(logit_new,output) *self.kd_loss_weight
+                    loss_ofa = sum(ofa_losses_recent) * self.ofa_loss_weight
                     total_loss_kd += loss_kd
-                    (loss_ofa).backward()
-                    self.optimizer.step()
+                    total_loss_ofa += loss_ofa
+                
                     
-            # loss = total_loss_kd +total_loss_ofa + total_loss_gt
-            # loss.backward()
-            # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-            # self.optimizer.step()
-            
-        if self.learning_rate_decay:
-            self.learning_rate_scheduler.step()
+                for i,yy in enumerate(y):
+                    yc = yy.item()
+                    logits[yc].append(output[i,:].detach().data)
+                (loss_kd + loss_ofa + loss_gt).backward()
+                self.optimizer.step()
+            self.logits = agg_func(logits)
+            if self.learning_rate_decay:
+                self.learning_rate_scheduler.step()
+            torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=1, gamma=self.learning_rate_decay_gamma)
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-
-    # use public_data to predict
-        self.model.eval()
-        with torch.no_grad():
-            logits = defaultdict(list)
-            for x, _ in publicloadere:
-                # if x.shape[1] == 3:  # 假设x的形状为[N, C, H, W]
-                #     x = x.mean(dim=1, keepdim=True)
-                x = x.to(self.device)
-                output = self.model(x)
-                for i in range(output.shape[0]):
-                    logits[i].append(output[i,:].detach().data)
-        self.logits = agg_func(logits)
-
-
+            if self.clip_grad is not None:
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_grad)
     def set_logits(self, global_logits):
         self.global_logits = copy.deepcopy(global_logits)
         
     def train_metrics(self):
         trainloader = self.load_train_data()
-        publicloadere = self.load_public_data()
+        # publicloadere = self.load_public_data()
         self.model.to(self.device)
         self.model.eval()
 
@@ -172,64 +140,55 @@ class clientHdl(Client):
                 total_loss_gt += loss_gt.item() * y.size(0)
                 train_num += y.size(0)
                 
-            if self.global_logits is not None:
-                for i,(xp,yp) in enumerate(publicloadere):
-                    xp = xp.to(self.device)
-                    yp = yp.to(self.device)
-                    if len(yp.shape) != 1:
-                        target_mask = F.one_hot(yp.argmax(-1), self.num_classes)
+                if self.global_logits is not None:
+                    
+                    if len(y.shape) != 1:
+                        target_mask = F.one_hot(y.argmax(-1).long(), self.num_classes)
                     else:
-                        target_mask = F.one_hot(yp, self.num_classes)
-                # LOSS OFA
-                    ofa_losses = []
+                        target_mask = F.one_hot(y.long(), self.num_classes)
+
+                    # LOSS OFA   
+                    loss_ofa_recent = []
                     for stage, eps in zip(self.stage_count, self.eps):
                         model_n = self.stage_info(self.modelname, stage).to(self.device)
-                        feat = model_n(xp)  # 获取特征
-                        # print(self.modelname)
-                        # print(stage)
+                        feat = model_n(x)  # 获取特征
                         logits_student = self.projectors[str(stage)].to(self.device)(feat)  # 获取学生模型输出
-                        # 注意：这里需要确保global_logits已经转换为适合每个阶段的格式
-                        # teacher_logits = torch.tensor(np.array(self.global_logits))
-                        # print(self.global_logits.shape)
-                        # 预测公共数据集
-                        teacher_logits = torch.stack([self.global_logits[yi.item()] for yi in yp])
-                        ofa_losses.append(self.ofa_loss(logits_student, teacher_logits, target_mask, eps, self.ofa_temperature))
-                    loss_ofa = sum(ofa_losses) * self.ofa_loss_weight
-                # LOSS KD
-                    # loss_kd1 = []
-                    # output = self.model(xp)
-                    # for i, yy in enumerate(yp):
-                    #     y_c = yy.item()
-                    #     temperature = self.temperature
-                    #     if not isinstance(self.global_logits[y_c], list):
-                    #         teacher_logits1 = self.global_logits[y_c].to(self.device)
-                    #         # 将输出和教师logits都除以温度
-                    #         soft_target = F.softmax(teacher_logits1 / temperature, dim=-1)
-                    #         log_soft_output = F.log_softmax(output[i, :] / temperature, dim=-1)
-                    #         # soft_output = F.softmax(output[i, :] / temperature, dim=0)
-                    #         # 使用KL散度作为蒸馏损失
-                    #         loss_kd1.append(F.kl_div(log_soft_output, soft_target, reduction='batchmean'))
-                    # loss_kd = sum(loss_kd1) * self.kd_loss_weight
-                    
-                    train_public_num += yp.size(0)
-                    total_loss_ofa += loss_ofa.item() * yp.size(0)
-                    # total_loss_kd += loss_kd.item() * yp.size(0)
+                            # 注意：这里需要确保global_logits已经转换为适合每个阶段的格式
+                            # teacher_logits = torch.tensor(np.array(self.global_logits))
+                            # print(self.global_logits.shape)
+                        teacher_logits = torch.stack([self.global_logits[yi.item()] for yi in y])
+                        loss_ofa_recent.append(self.ofa_loss(logits_student, teacher_logits, target_mask, eps, self.ofa_temperature))
+                 
+
+                    logit_new = copy.deepcopy(output.detach())
+                    for i,yy in enumerate(y):    
+                        y_c = yy.item()
+                        logit_new[i,:] = self.global_logits[y_c].data.to(self.device)
+                    loss_kd = self.loss_mse(logit_new,output) *self.kd_loss_weight
+                          
+
+
+                    loss_ofa = sum(loss_ofa_recent) * self.ofa_loss_weight
+                        
+                    train_public_num += y.size(0)
+                    total_loss_ofa += loss_ofa.item() * y.size(0)
+                    total_loss_kd += loss_kd.item() * y.size(0)
                 
                 
 
 
         average_loss_gt = total_loss_gt / train_num if train_num > 0 else 0
         average_loss_ofa = total_loss_ofa / train_public_num if train_public_num > 0 else 0
-        # average_loss_kd = total_loss_kd / train_public_num if train_public_num > 0 else 0
+        average_loss_kd = total_loss_kd / train_public_num if train_public_num > 0 else 0
 
         print(f"client{self.id}")
         print(f"Ground Truth Loss (loss_gt): {average_loss_gt}")
         print(f"OFA Loss (loss_ofa): {average_loss_ofa}")
-        # print(f"Knowledge Distillation Loss (loss_kd): {average_loss_kd}")
+        print(f"Knowledge Distillation Loss (loss_kd): {average_loss_kd}")
 
-        # total_average_loss = (average_loss_gt + average_loss_ofa + average_loss_kd) * train_num
+        total_average_loss = (average_loss_gt + average_loss_ofa + average_loss_kd) * train_num
 
-        total_average_loss = (average_loss_gt + average_loss_ofa) * train_num
+    
         return total_average_loss, train_num
 
 
@@ -397,49 +356,7 @@ class clientHdl(Client):
             return stage_dims[stage]
         else:
             raise NotImplementedError(f"Model {modelname} not supported for feature dimension extraction.")
-
-
-    # 通用识别比较困难
-    # def _get_feature_dim(self, model_n, modelname, stage):
-    #     if modelname == 'googlenet':
-    #         # Manually define the output feature dimension for each stage of GoogLeNet.
-    #         # These dimensions are determined based on the structure of the GoogLeNet model.
-    #         # Note: The actual values here might need to be adjusted based on the specific implementation of GoogLeNet you are using.
-    #         stage_dims = {
-    #             1: 192,  # After conv3, before maxpool2
-    #             2: 256,  # Output of inception3a
-    #             3: 512,  # Output of inception4a
-    #             4: 1024, # Output before avgpool, after inception5b
-    #         }
-    #         return stage_dims[stage]
-    #     else:
-    #         # For other models, use the general approach to determine feature dimension.
-    #         def get_dim(layer):
-    #             if isinstance(layer, nn.Conv2d):
-    #                 return layer.out_channels
-    #             elif isinstance(layer, nn.Linear):
-    #                 return layer.out_features
-    #             elif isinstance(layer, nn.Sequential):
-    #                 for sub_layer in reversed(layer):
-    #                     result = get_dim(sub_layer)
-    #                     if result is not None:
-    #                         return result
-    #             elif isinstance(layer, nn.AdaptiveAvgPool2d):
-    #                 # If we encounter an AdaptiveAvgPool2d, we assume the feature dimension
-    #                 # is equal to the number of output channels of the last Conv2d layer.
-    #                 for sub_layer in reversed(layer._modules.values()):
-    #                     result = get_dim(sub_layer)
-    #                     if result is not None:
-    #                         return result
-    #             return None
-
-    #         feature_dim = get_dim(model_n)
-    #         if feature_dim is not None:
-    #             return feature_dim
-
-    #     raise NotImplementedError("Could not determine feature dimension from the model stage.")
     
-
     def _create_projector(self, stage,modelname):
         # 这个函数基于每个阶段的模型输出维度创建一个适合的projector
         model_n = self.stage_info(self.modelname, stage)

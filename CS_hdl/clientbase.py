@@ -37,7 +37,7 @@ from utils.data_utils import read_client_data,read_public_data
 import random
 import numpy as np
 import os
-SEED = 2021
+SEED = 2024
 random.seed(SEED)
 np.random.seed(SEED)
 os.environ['PYTHONHASHSEED'] = str(SEED)

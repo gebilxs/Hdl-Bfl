@@ -16,8 +16,8 @@ torch.backends.cudnn.benchmark = True
 
 def read_data(dataset, idx, is_train=True):
     if is_train:
-        # train_data_dir = os.path.join('../dataset', dataset, 'train/')
-        train_data_dir = os.path.join('dataset',dataset,'train/')
+        train_data_dir = os.path.join('dataset', dataset, 'train/')
+        # train_data_dir = os.path.join('../dataset',dataset,'train/')
 
         train_file = train_data_dir + str(idx) + '.npz'
         with open(train_file, 'rb') as f:
@@ -26,8 +26,8 @@ def read_data(dataset, idx, is_train=True):
         return train_data
 
     else:
-        # test_data_dir = os.path.join('../dataset', dataset, 'test/')
-        test_data_dir = os.path.join('dataset',dataset,'test/')
+        test_data_dir = os.path.join('dataset', dataset, 'test/')
+        # test_data_dir = os.path.join('../dataset',dataset,'test/')
         test_file = test_data_dir + str(idx) + '.npz'
         with open(test_file, 'rb') as f:
             test_data = np.load(f, allow_pickle=True)['data'].tolist()
@@ -45,12 +45,19 @@ def read_data(dataset, idx, is_train=True):
 def read_public_data(public_dataset,is_train=True):
     if is_train:
         public_data_dir = os.path.join('dataset',public_dataset+'_public')
+        # public_data_dir = os.path.join('../dataset',public_dataset+'_public')
         public_file = public_data_dir + '/0.npz'
         if public_dataset == 'mnist':
             with np.load(public_file,allow_pickle=True) as public_dataset:
                 X_public = torch.Tensor(public_dataset['x']).type(torch.float32)
+             
                 X_public = X_public.unsqueeze(1)  # 添加一个通道维度
-                # print(X_public.shape)
+                # print(f"show X_public_max:{X_public.max()}")
+                # print(f"show X_public_min:{X_public.min()}")
+                # print(f"show X_public_mean:{X_public.mean()}")
+                # print(f"show X_public_shape:{X_public.shape}")
+                # print(f"show X_public_leftUp:{X_public[0, 0, :10, :10]}")
+
                 y_public = torch.Tensor(public_dataset['y']).type(torch.long)
         else:
             with np.load(public_file,allow_pickle=True) as public_dataset:
