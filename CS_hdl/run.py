@@ -23,8 +23,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--algorithm', type=str, default='hdl')
-    parser.add_argument('--dataset', type=str, default='fmnist-0.5')
+    parser.add_argument('--algorithm', type=str, default='hdl1')
+    parser.add_argument('--dataset', type=str, default='fmnist-100')
     parser.add_argument('--models', type=str,
                         default='resnet,shufflenet,googlenet,alexnet')
     parser.add_argument('--num_clients', type=int, default=20)

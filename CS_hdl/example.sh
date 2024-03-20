@@ -13,4 +13,4 @@
 # emnist-100
 # nohup python -u CS_hdl/run.py --dataset emnist-100 --num_classes 26 > logs/emnist-100_T1.2.out 2>&1 &
 
-nohup python -u CS_hdl/run.py --dataset fmnist-100  > logs/ofa_fmnist-100_T5_ow1-pro+1112.out 2>&1 &
+nohup python -u run.py --dataset emnist-100  > logs/ofa_emnist-100.out 2>&1 &

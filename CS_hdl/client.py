@@ -45,7 +45,6 @@ class clientHdl(Client):
         self.clip_grad = args.clip_grad
     def train(self):
         trainloadere = self.load_train_data()
-        publicloadere = self.load_public_data()
         start_time = time.time()
 
         self.model.train()
@@ -358,7 +357,6 @@ class clientHdl(Client):
             raise NotImplementedError(f"Model {modelname} not supported for feature dimension extraction.")
     
     def _create_projector(self, stage,modelname):
-        # 这个函数基于每个阶段的模型输出维度创建一个适合的projector
         model_n = self.stage_info(self.modelname, stage)
         # print(model_n)
         # 需要根据model_n的具体输出维度来定制projector，这里只是一个示例
